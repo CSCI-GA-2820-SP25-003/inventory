@@ -20,8 +20,14 @@ and SQL database
 """
 import sys
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate  
 from service import config
 from service.common import log_handlers
+
+# Initialize database
+db = SQLAlchemy()
+migrate = Migrate()  
 
 
 ############################################################
@@ -37,6 +43,7 @@ def create_app():
     # pylint: disable=import-outside-toplevel
     from service.models import db
     db.init_app(app)
+    migrate.init_app(app, db)
 
     with app.app_context():
         # Dependencies require we import the routes AFTER the Flask app is created
