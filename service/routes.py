@@ -30,13 +30,15 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 # GET INDEX
 ######################################################################
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
-    """Root URL response"""
-    return (
-        "Reminder: return some useful information in json format about the service here",
-        status.HTTP_200_OK,
-    )
+    """Root URL response with service details"""
+    return jsonify({
+        "service": "Inventory Management API",
+        "version": "1.0",
+        "status": "running",
+        "description": "A REST API for managing inventory items.",
+    }), status.HTTP_200_OK
 
 
 ######################################################################
@@ -46,6 +48,7 @@ def index():
 # Todo: Place your REST API code here ...
 
 ######################################################################
+
 # CREATE INVENTORY
 ######################################################################
 @app.route("/inventory", methods=["POST"])
@@ -73,6 +76,27 @@ def create_inventory():
     location_url = "/"
     
     return jsonify(inventory.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+
+# DELETE INVENTORY
+######################################################################
+#@app.route("/inventory/<int:inventory_id>", methods=["DELETE"])
+# def delete_inventory(inventory_id):
+#     """
+#     Delete an Inventory Item
+
+#     This endpoint will delete an Inventory Item based the id specified in the path
+#     """
+#     app.logger.info("Request to Delete an Inventory item with id [%s]", inventory_id)
+
+#     # Delete the Inventory if it exists
+#     inventory = Inventory.find(inventory_id)
+#     if inventory:
+#         app.logger.info("Inventory with ID: %d found.", inventory.id)
+#         inventory.delete()
+
+#     app.logger.info("Inventory with ID: %d delete complete.", inventory_id)
+#     return {}, status.HTTP_204_NO_CONTENT
+
 
 ######################################################################
 # UPDATE INVENTORY
