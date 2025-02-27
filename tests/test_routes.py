@@ -25,10 +25,12 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Inventory
+from .factories import InventoryModelFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = '/inventory'
 
 BASE_URL = "/delete"
 
@@ -93,6 +95,40 @@ class TestYourResourceService(TestCase):
     #     response = self.client.delete(f"{BASE_URL}/0")
     #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
     #     self.assertEqual(len(response.data), 0)
+
+######################################################################
+# CREATE INVENTORY TEST CASES
+######################################################################
+
+    def test_create_inventory(self):
+        """It should Create a new Inventory"""
+        test_inventory = InventoryModelFactory()
+        logging.debug("Test Inventory: %s", test_inventory.serialize())
+        response = self.client.post(BASE_URL, json=test_inventory.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_inventory = response.get_json()
+        self.assertEqual(new_inventory["name"], test_inventory.name)
+        self.assertEqual(new_inventory["product_id"], test_inventory.product_id)
+        self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        self.assertEqual(new_inventory["condition"], test_inventory.condition)
+        self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
+
+        # Todo: uncomment this code when get_inventory is implemented
+        # Check that the location header was correct
+        # response = self.client.get(location)
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # new_inventory = response.get_json()
+        # self.assertEqual(new_inventory["name"], test_inventory.name)
+        # self.assertEqual(new_inventory["product_id"], test_inventory.product_id)
+        # self.assertEqual(new_inventory["quantity"], test_inventory.quantity)
+        # self.assertEqual(new_inventory["condition"], test_inventory.condition)
+        # self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
 
 ######################################################################
 # UPDATE INVENTORY TEST CASES
