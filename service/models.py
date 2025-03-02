@@ -99,10 +99,13 @@ class Inventory(db.Model):
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
-            raise DataValidationError("Invalid Inventory: missing " + error.args[0]) from error
+            raise DataValidationError(
+                "Invalid Inventory: missing " + error.args[0]
+            ) from error
         except TypeError as error:
             raise DataValidationError(
-                "Invalid Inventory: body of request contained bad or no data " + str(error)
+                "Invalid Inventory: body of request contained bad or no data "
+                + str(error)
             ) from error
         return self
 
