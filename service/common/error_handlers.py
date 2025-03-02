@@ -98,3 +98,18 @@ def internal_server_error(error):
         ),
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
+
+
+# added another handler for generic exceptions
+@app.errorhandler(Exception)
+def internal_server_error(error):
+    """Handle unexpected exceptions"""
+    app.logger.error(f"Internal Server Error: {error}")
+    return (
+        jsonify(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            error="Internal Server Error",
+            message=str(error),
+        ),
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )

@@ -23,7 +23,7 @@ and Delete YourResourceModel
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Inventory
+from service.models import Inventory, db
 from service.common import status  # HTTP Status Codes
 
 
@@ -33,12 +33,17 @@ from service.common import status  # HTTP Status Codes
 @app.route("/", methods=["GET"])
 def index():
     """Root URL response with service details"""
-    return jsonify({
-        "service": "Inventory Management API",
-        "version": "1.0",
-        "status": "running",
-        "description": "A REST API for managing inventory items.",
-    }), status.HTTP_200_OK
+    return (
+        jsonify(
+            {
+                "service": "Inventory Management API",
+                "version": "1.0",
+                "status": "running",
+                "description": "A REST API for managing inventory items.",
+            }
+        ),
+        status.HTTP_200_OK,
+    )
 
 
 ######################################################################
@@ -48,6 +53,34 @@ def index():
 # Todo: Place your REST API code here ...
 
 ######################################################################
+
+######################################################################
+# LIST INVENTORY
+######################################################################
+
+
+@app.route("/inventory", methods=["GET"])
+def list_inventory():
+    """Minimal implementation: List all inventory items"""
+    return jsonify([]), status.HTTP_200_OK  # Only returns an empty list
+
+
+######################################################################
+# READ INVENTORY
+######################################################################
+
+
+@app.route("/inventory/<int:inventory_id>", methods=["GET"])
+def get_inventory(inventory_id):
+    """Minimal implementation: Retrieve a single inventory item"""
+    app.logger.info(f"Fetch inventory item with ID {inventory_id}")
+
+    inventory = Inventory.find(inventory_id)
+
+    if not inventory:
+        return jsonify({"error": "Inventory item not found"}), status.HTTP_404_NOT_FOUND
+    return jsonify(inventory.serialize()), status.HTTP_200_OK
+
 
 # CREATE INVENTORY
 ######################################################################
@@ -71,84 +104,98 @@ def create_inventory():
     app.logger.info("Inventory with new id [%s] saved!", inventory.id)
 
     # Return the location of the new Inventory
-    # Todo: uncomment this code when get_inventory is implemented 
-    # location_url = url_for("get_inventory", inventory_id=inventory.id, _external=True)
-    location_url = "/"
-    
-    return jsonify(inventory.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+    # Todo: uncomment this code when get_inventory is implemented
+    location_url = url_for("get_inventory", inventory_id=inventory.id, _external=True)
+    # location_url = "/"
 
-# DELETE INVENTORY
-######################################################################
-#@app.route("/inventory/<int:inventory_id>", methods=["DELETE"])
-# def delete_inventory(inventory_id):
-#     """
-#     Delete an Inventory Item
-
-#     This endpoint will delete an Inventory Item based the id specified in the path
-#     """
-#     app.logger.info("Request to Delete an Inventory item with id [%s]", inventory_id)
-
-#     # Delete the Inventory if it exists
-#     inventory = Inventory.find(inventory_id)
-#     if inventory:
-#         app.logger.info("Inventory with ID: %d found.", inventory.id)
-#         inventory.delete()
-
-#     app.logger.info("Inventory with ID: %d delete complete.", inventory_id)
-#     return {}, status.HTTP_204_NO_CONTENT
+    return (
+        jsonify(inventory.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
 
 
-######################################################################
-# UPDATE INVENTORY
-######################################################################
+# ######################################################################
+# # UPDATE INVENTORY
+# ######################################################################
 
 # @app.route("/inventory/<int:inventory_id>", methods=["PUT"])
 # def update_inventory(inventory_id):
-#     """
-#     Update an existing Inventory item.
-#     Expected JSON payload may include any or all of:
-#       - name (string)
-#       - product_id (int)
-#       - quantity (int, non-negative)
-#       - condition (one of ["New", "Used", "Open-Box"])
-#       - restock_level (int, non-negative)
-#     Returns:
-#       - 404 if the item doesn't exist.
-#       - 400 if the JSON payload is invalid.
-#       - 200 with the updated item in JSON if successful.
-#     """
-#     # Retrieve the Inventory item by ID.
-#     item = Inventory.find(inventory_id)
-#     if not item:
-#         abort(status.HTTP_404_NOT_FOUND, f"Inventory item with id {inventory_id} not found.")
+#      """
+#      Update an existing Inventory item.
+#      Expected JSON payload may include any or all of:
+#        - name (string)
+#        - product_id (int)
+#        - quantity (int, non-negative)
+#        - condition (one of ["New", "Used", "Open-Box"])
+#        - restock_level (int, non-negative)
+#      Returns:
+#        - 404 if the item doesn't exist.
+#        - 400 if the JSON payload is invalid.
+#        - 200 with the updated item in JSON if successful.
+#      """
+#      # Retrieve the Inventory item by ID.
+#      item = Inventory.find(inventory_id)
+#      if not item:
+#          abort(status.HTTP_404_NOT_FOUND, f"Inventory item with id {inventory_id} not found.")
 
-#     # Ensure the request has JSON content.
-#     if not request.is_json:
-#         abort(status.HTTP_400_BAD_REQUEST, "Request payload must be in JSON format")
-#     data = request.get_json()
+#      # Ensure the request has JSON content.
+#      if not request.is_json:
+#          abort(status.HTTP_400_BAD_REQUEST, "Request payload must be in JSON format")
+#      data = request.get_json()
 
-#     # Helper function to update a field if present, with optional validation.
-#     def update_field(field, validator=None, error_msg="Invalid data"):
-#         if field in data:
-#             value = data[field]
-#             if validator and not validator(value):
-#                 abort(status.HTTP_400_BAD_REQUEST, error_msg)
-#             setattr(item, field, value)
+#      # Helper function to update a field if present, with optional validation.
+#      def update_field(field, validator=None, error_msg="Invalid data"):
+#          if field in data:
+#              value = data[field]
+#              if validator and not validator(value):
+#                  abort(status.HTTP_400_BAD_REQUEST, error_msg)
+#              setattr(item, field, value)
 
-#     update_field("name")
-#     update_field("product_id")
-#     update_field("quantity", lambda v: isinstance(v, int) and v >= 0,
-#                  "Invalid quantity; must be a non-negative integer")
-#     update_field("condition", lambda v: v in ["New", "Used", "Open-Box"],
-#                  "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']")
-#     update_field("restock_level", lambda v: isinstance(v, int) and v >= 0,
-#                  "Invalid restock_level; must be a non-negative integer")
+#      update_field("name")
+#      update_field("product_id")
+#      update_field("quantity", lambda v: isinstance(v, int) and v >= 0,
+#                   "Invalid quantity; must be a non-negative integer")
+#      update_field("condition", lambda v: v in ["New", "Used", "Open-Box"],
+#                   "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']")
+#      update_field("restock_level", lambda v: isinstance(v, int) and v >= 0,
+#                   "Invalid restock_level; must be a non-negative integer")
 
-#     # Commit changes
-#     item.update()
+#      # Commit changes
+#      item.update()
 
-#     # Return updated item
-#     return jsonify(item.serialize()), status.HTTP_200_OK
+#      # Return updated item
+#      return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE INVENTORY
+######################################################################
+@app.route("/inventory/<int:inventory_id>", methods=["DELETE"])
+def delete_inventory(inventory_id):
+    """
+    Delete an Inventory Item
+    This endpoint will delete an Inventory Item based on its id
+    """
+    app.logger.info("Request to Delete an Inventory item with id [%s]", inventory_id)
+
+    # Find the Inventory item
+    inventory = Inventory.find(inventory_id)
+    if not inventory:
+        app.logger.warning("Inventory item with ID: %d not found.", inventory_id)
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Inventory item with id {inventory_id} not found",
+        )
+        # return jsonify({"error": "Inventory item not found"}), status.HTTP_404_NOT_FOUND
+
+    # Delete the inventory item
+    app.logger.info("Inventory item with ID: %d found, deleting...", inventory.id)
+    inventory.delete()
+    app.logger.info("Inventory item with ID: %d deleted successfully.", inventory_id)
+
+    # return jsonify({"message": "Inventory item deleted successfully"}), status.HTTP_204_NO_CONTENT
+    return "", status.HTTP_204_NO_CONTENT
 
 
 ######################################################################
