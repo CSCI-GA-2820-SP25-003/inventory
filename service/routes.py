@@ -25,6 +25,7 @@ from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Inventory, db
 from service.common import status  # HTTP Status Codes
+from sqlalchemy import text
 
 
 ######################################################################
@@ -32,14 +33,13 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 @app.route("/", methods=["GET"])
 def index():
-    """Root URL response with service details"""
+    """Root URL response with service metadata"""
     return (
         jsonify(
             {
-                "service": "Inventory Management API",
+                "service": "inventory-service",
                 "version": "1.0",
-                "status": "running",
-                "description": "A REST API for managing inventory items.",
+                "endpoints": ["/inventory", "/inventory/{id}", "/health"],
             }
         ),
         status.HTTP_200_OK,
@@ -53,6 +53,24 @@ def index():
 # Todo: Place your REST API code here ...
 
 ######################################################################
+
+######################################################################
+# HEALTH CHECK INVENTORY
+######################################################################
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Check if service is healthy"""
+    try:
+        db.session.execute(text("SELECT 1;"))
+        return jsonify({"status": "OK"}), status.HTTP_200_OK
+    except Exception as e:
+        return (
+            jsonify({"status": "ERROR", "message": str(e)}),
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 
 ######################################################################
 # LIST INVENTORY
@@ -119,6 +137,7 @@ def create_inventory():
 # # UPDATE INVENTORY
 # ######################################################################
 
+
 @app.route("/inventory/<int:inventory_id>", methods=["PUT"])
 def update_inventory(inventory_id):
     """
@@ -137,7 +156,10 @@ def update_inventory(inventory_id):
     # Retrieve the Inventory item by ID.
     item = Inventory.find(inventory_id)
     if not item:
-        abort(status.HTTP_404_NOT_FOUND, f"Inventory item with id {inventory_id} not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Inventory item with id {inventory_id} not found.",
+        )
 
     # Ensure the request has JSON content.
     if not request.is_json:
@@ -154,12 +176,21 @@ def update_inventory(inventory_id):
 
     update_field("name")
     update_field("product_id")
-    update_field("quantity", lambda v: isinstance(v, int) and v >= 0,
-                 "Invalid quantity; must be a non-negative integer")
-    update_field("condition", lambda v: v in ["New", "Used", "Open-Box"],
-                 "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']")
-    update_field("restock_level", lambda v: isinstance(v, int) and v >= 0,
-                 "Invalid restock_level; must be a non-negative integer")
+    update_field(
+        "quantity",
+        lambda v: isinstance(v, int) and v >= 0,
+        "Invalid quantity; must be a non-negative integer",
+    )
+    update_field(
+        "condition",
+        lambda v: v in ["New", "Used", "Open-Box"],
+        "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']",
+    )
+    update_field(
+        "restock_level",
+        lambda v: isinstance(v, int) and v >= 0,
+        "Invalid restock_level; must be a non-negative integer",
+    )
 
     # Commit changes
     item.update()
