@@ -119,53 +119,53 @@ def create_inventory():
 # # UPDATE INVENTORY
 # ######################################################################
 
-# @app.route("/inventory/<int:inventory_id>", methods=["PUT"])
-# def update_inventory(inventory_id):
-#      """
-#      Update an existing Inventory item.
-#      Expected JSON payload may include any or all of:
-#        - name (string)
-#        - product_id (int)
-#        - quantity (int, non-negative)
-#        - condition (one of ["New", "Used", "Open-Box"])
-#        - restock_level (int, non-negative)
-#      Returns:
-#        - 404 if the item doesn't exist.
-#        - 400 if the JSON payload is invalid.
-#        - 200 with the updated item in JSON if successful.
-#      """
-#      # Retrieve the Inventory item by ID.
-#      item = Inventory.find(inventory_id)
-#      if not item:
-#          abort(status.HTTP_404_NOT_FOUND, f"Inventory item with id {inventory_id} not found.")
+@app.route("/inventory/<int:inventory_id>", methods=["PUT"])
+def update_inventory(inventory_id):
+    """
+    Update an existing Inventory item.
+    Expected JSON payload may include any or all of:
+       - name (string)
+       - product_id (int)
+       - quantity (int, non-negative)
+       - condition (one of ["New", "Used", "Open-Box"])
+       - restock_level (int, non-negative)
+    Returns:
+       - 404 if the item doesn't exist.
+       - 400 if the JSON payload is invalid.
+       - 200 with the updated item in JSON if successful.
+    """
+    # Retrieve the Inventory item by ID.
+    item = Inventory.find(inventory_id)
+    if not item:
+        abort(status.HTTP_404_NOT_FOUND, f"Inventory item with id {inventory_id} not found.")
 
-#      # Ensure the request has JSON content.
-#      if not request.is_json:
-#          abort(status.HTTP_400_BAD_REQUEST, "Request payload must be in JSON format")
-#      data = request.get_json()
+    # Ensure the request has JSON content.
+    if not request.is_json:
+        abort(status.HTTP_400_BAD_REQUEST, "Request payload must be in JSON format")
+    data = request.get_json()
 
-#      # Helper function to update a field if present, with optional validation.
-#      def update_field(field, validator=None, error_msg="Invalid data"):
-#          if field in data:
-#              value = data[field]
-#              if validator and not validator(value):
-#                  abort(status.HTTP_400_BAD_REQUEST, error_msg)
-#              setattr(item, field, value)
+    # Helper function to update a field if present, with optional validation.
+    def update_field(field, validator=None, error_msg="Invalid data"):
+        if field in data:
+            value = data[field]
+            if validator and not validator(value):
+                abort(status.HTTP_400_BAD_REQUEST, error_msg)
+            setattr(item, field, value)
 
-#      update_field("name")
-#      update_field("product_id")
-#      update_field("quantity", lambda v: isinstance(v, int) and v >= 0,
-#                   "Invalid quantity; must be a non-negative integer")
-#      update_field("condition", lambda v: v in ["New", "Used", "Open-Box"],
-#                   "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']")
-#      update_field("restock_level", lambda v: isinstance(v, int) and v >= 0,
-#                   "Invalid restock_level; must be a non-negative integer")
+    update_field("name")
+    update_field("product_id")
+    update_field("quantity", lambda v: isinstance(v, int) and v >= 0,
+                 "Invalid quantity; must be a non-negative integer")
+    update_field("condition", lambda v: v in ["New", "Used", "Open-Box"],
+                 "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']")
+    update_field("restock_level", lambda v: isinstance(v, int) and v >= 0,
+                 "Invalid restock_level; must be a non-negative integer")
 
-#      # Commit changes
-#      item.update()
+    # Commit changes
+    item.update()
 
-#      # Return updated item
-#      return jsonify(item.serialize()), status.HTTP_200_OK
+    # Return updated item
+    return jsonify(item.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
