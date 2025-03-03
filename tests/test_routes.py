@@ -106,12 +106,37 @@ class TestYourResourceService(TestCase):
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
 
+    # Todo: Add your test cases here...
+
+    ######################################################################
+    # ROOT ENDPOINT TEST CASES
+    ######################################################################
+
     def test_index(self):
-        """It should call the home page"""
+        """It should return API metadata from the root endpoint"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+        metadata = resp.get_json()
+        self.assertEqual(metadata["service"], "inventory-service")
+        self.assertEqual(metadata["version"], "1.0")
+        self.assertIn("/inventory", metadata["endpoints"])
+        self.assertIn("/inventory/{id}", metadata["endpoints"])
+        self.assertIn("/health", metadata["endpoints"])
+
+    ######################################################################
+    # HEALTH CHECK TEST CASES
+    ######################################################################
+
+    def test_health_check(self):
+        """It should return service health status"""
+        resp = self.client.get("/health")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        health_status = resp.get_json()
+        self.assertIn("status", health_status)
+        self.assertEqual(health_status["status"], "OK")  # If DB is connected
+
     ######################################################################
     # LIST INVENTORY TEST CASES
     ######################################################################
@@ -184,7 +209,7 @@ class TestYourResourceService(TestCase):
             "product_id": 111,
             "quantity": 5,
             "condition": "New",
-            "restock_level": 3
+            "restock_level": 3,
         }
         create_resp = self.client.post("/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
@@ -194,7 +219,7 @@ class TestYourResourceService(TestCase):
             "name": "UpdatedName",
             "quantity": 10,
             "condition": "Used",
-            "restock_level": 2
+            "restock_level": 2,
         }
         update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
         self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
@@ -206,10 +231,7 @@ class TestYourResourceService(TestCase):
 
     def test_update_inventory_not_found(self):
         """It should return 404 when updating a non-existent item."""
-        update_data = {
-            "name": "NonExistent",
-            "quantity": 5
-        }
+        update_data = {"name": "NonExistent", "quantity": 5}
         resp = self.client.put("/inventory/9999", json=update_data)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -220,7 +242,7 @@ class TestYourResourceService(TestCase):
             "product_id": 222,
             "quantity": 5,
             "condition": "New",
-            "restock_level": 3
+            "restock_level": 3,
         }
         create_resp = self.client.post("/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
@@ -237,7 +259,7 @@ class TestYourResourceService(TestCase):
             "product_id": 333,
             "quantity": 5,
             "condition": "New",
-            "restock_level": 3
+            "restock_level": 3,
         }
         create_resp = self.client.post("/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
@@ -254,7 +276,7 @@ class TestYourResourceService(TestCase):
             "product_id": 444,
             "quantity": 5,
             "condition": "New",
-            "restock_level": 3
+            "restock_level": 3,
         }
         create_resp = self.client.post("/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
@@ -271,13 +293,15 @@ class TestYourResourceService(TestCase):
             "product_id": 555,
             "quantity": 5,
             "condition": "New",
-            "restock_level": 3
+            "restock_level": 3,
         }
         create_resp = self.client.post("/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         item_id = create_resp.get_json()["id"]
 
-        update_resp = self.client.put(f"/inventory/{item_id}", data="not json", content_type="text/plain")
+        update_resp = self.client.put(
+            f"/inventory/{item_id}", data="not json", content_type="text/plain"
+        )
         self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     ######################################################################
