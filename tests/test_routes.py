@@ -177,108 +177,108 @@ class TestYourResourceService(TestCase):
     # ######################################################################
     # # UPDATE INVENTORY TEST CASES
     # ######################################################################
-    #     def test_update_inventory_success(self):
-    #          """It should update an existing Inventory item successfully."""
-    #          new_item = {
-    #              "name": "OriginalName",
-    #              "product_id": 111,
-    #              "quantity": 5,
-    #              "condition": "New",
-    #              "restock_level": 3
-    #          }
-    #          create_resp = self.client.post("/inventory", json=new_item)
-    #          self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-    #          item_id = create_resp.get_json()["id"]
+    def test_update_inventory_success(self):
+        """It should update an existing Inventory item successfully."""
+        new_item = {
+            "name": "OriginalName",
+            "product_id": 111,
+            "quantity": 5,
+            "condition": "New",
+            "restock_level": 3
+        }
+        create_resp = self.client.post("/inventory", json=new_item)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        item_id = create_resp.get_json()["id"]
 
-    #          update_data = {
-    #              "name": "UpdatedName",
-    #              "quantity": 10,
-    #              "condition": "Used",
-    #              "restock_level": 2
-    #          }
-    #          update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
-    #          self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
-    #          updated_item = update_resp.get_json()
-    #          self.assertEqual(updated_item["name"], "UpdatedName")
-    #          self.assertEqual(updated_item["quantity"], 10)
-    #          self.assertEqual(updated_item["condition"], "Used")
-    #          self.assertEqual(updated_item["restock_level"], 2)
+        update_data = {
+            "name": "UpdatedName",
+            "quantity": 10,
+            "condition": "Used",
+            "restock_level": 2
+        }
+        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
+        updated_item = update_resp.get_json()
+        self.assertEqual(updated_item["name"], "UpdatedName")
+        self.assertEqual(updated_item["quantity"], 10)
+        self.assertEqual(updated_item["condition"], "Used")
+        self.assertEqual(updated_item["restock_level"], 2)
 
-    #     def test_update_inventory_not_found(self):
-    #          """It should return 404 when updating a non-existent item."""
-    #          update_data = {
-    #              "name": "NonExistent",
-    #              "quantity": 5
-    #          }
-    #          resp = self.client.put("/inventory/9999", json=update_data)
-    #          self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    def test_update_inventory_not_found(self):
+        """It should return 404 when updating a non-existent item."""
+        update_data = {
+            "name": "NonExistent",
+            "quantity": 5
+        }
+        resp = self.client.put("/inventory/9999", json=update_data)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    #     def test_update_inventory_invalid_data(self):
-    #          """It should return 400 when updating with invalid data (negative quantity)."""
-    #          new_item = {
-    #              "name": "TestItem",
-    #              "product_id": 222,
-    #              "quantity": 5,
-    #              "condition": "New",
-    #              "restock_level": 3
-    #          }
-    #          create_resp = self.client.post("/inventory", json=new_item)
-    #          self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-    #          item_id = create_resp.get_json()["id"]
+    def test_update_inventory_invalid_data(self):
+        """It should return 400 when updating with invalid data (negative quantity)."""
+        new_item = {
+            "name": "TestItem",
+            "product_id": 222,
+            "quantity": 5,
+            "condition": "New",
+            "restock_level": 3
+        }
+        create_resp = self.client.post("/inventory", json=new_item)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        item_id = create_resp.get_json()["id"]
 
-    #          update_data = {"quantity": -10}
-    #          update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
-    #          self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
+        update_data = {"quantity": -10}
+        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    #     def test_update_inventory_invalid_condition(self):
-    #          """It should return 400 when updating with an invalid condition."""
-    #          new_item = {
-    #              "name": "TestItem",
-    #              "product_id": 333,
-    #              "quantity": 5,
-    #              "condition": "New",
-    #              "restock_level": 3
-    #          }
-    #          create_resp = self.client.post("/inventory", json=new_item)
-    #          self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-    #          item_id = create_resp.get_json()["id"]
+    def test_update_inventory_invalid_condition(self):
+        """It should return 400 when updating with an invalid condition."""
+        new_item = {
+            "name": "TestItem",
+            "product_id": 333,
+            "quantity": 5,
+            "condition": "New",
+            "restock_level": 3
+        }
+        create_resp = self.client.post("/inventory", json=new_item)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        item_id = create_resp.get_json()["id"]
 
-    #          update_data = {"condition": "InvalidCondition"}
-    #          update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
-    #          self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
+        update_data = {"condition": "InvalidCondition"}
+        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    #     def test_update_inventory_invalid_restock_level(self):
-    #          """It should return 400 when updating with an invalid restock_level (negative)."""
-    #          new_item = {
-    #              "name": "TestItem",
-    #              "product_id": 444,
-    #              "quantity": 5,
-    #              "condition": "New",
-    #              "restock_level": 3
-    #          }
-    #          create_resp = self.client.post("/inventory", json=new_item)
-    #          self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-    #          item_id = create_resp.get_json()["id"]
+    def test_update_inventory_invalid_restock_level(self):
+        """It should return 400 when updating with an invalid restock_level (negative)."""
+        new_item = {
+            "name": "TestItem",
+            "product_id": 444,
+            "quantity": 5,
+            "condition": "New",
+            "restock_level": 3
+        }
+        create_resp = self.client.post("/inventory", json=new_item)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        item_id = create_resp.get_json()["id"]
 
-    #          update_data = {"restock_level": -5}
-    #          update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
-    #          self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
+        update_data = {"restock_level": -5}
+        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    #     def test_update_inventory_non_json(self):
-    #          """It should return 400 when payload is not JSON."""
-    #          new_item = {
-    #              "name": "TestItem",
-    #              "product_id": 555,
-    #              "quantity": 5,
-    #              "condition": "New",
-    #              "restock_level": 3
-    #          }
-    #          create_resp = self.client.post("/inventory", json=new_item)
-    #          self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-    #          item_id = create_resp.get_json()["id"]
+    def test_update_inventory_non_json(self):
+        """It should return 400 when payload is not JSON."""
+        new_item = {
+            "name": "TestItem",
+            "product_id": 555,
+            "quantity": 5,
+            "condition": "New",
+            "restock_level": 3
+        }
+        create_resp = self.client.post("/inventory", json=new_item)
+        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
+        item_id = create_resp.get_json()["id"]
 
-    #          update_resp = self.client.put(f"/inventory/{item_id}", data="not json", content_type="text/plain")
-    #          self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
+        update_resp = self.client.put(f"/inventory/{item_id}", data="not json", content_type="text/plain")
+        self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     ######################################################################
     # DELETE INVENTORY TEST CASES

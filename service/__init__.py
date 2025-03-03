@@ -21,13 +21,13 @@ and SQL database
 import sys
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate  
+from flask_migrate import Migrate
 from service import config
 from service.common import log_handlers
 
 # Initialize database
 db = SQLAlchemy()
-migrate = Migrate()  
+migrate = Migrate()
 
 
 ############################################################
