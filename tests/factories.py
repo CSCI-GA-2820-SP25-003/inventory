@@ -13,10 +13,11 @@ class InventoryModelFactory(factory.Factory):
         """Maps factory to data model"""
 
         model = InventoryModel
+
     name = factory.Faker("word")
     product_id = factory.Sequence(lambda n: 1000 + n)
     quantity = 10
     condition = "New"
     restock_level = 5
 
-    # Todo: Add your other attributes here...
+    # Implementing other attributes here...

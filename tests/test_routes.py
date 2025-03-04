@@ -106,7 +106,7 @@ class TestYourResourceService(TestCase):
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
 
-    # Todo: Add your test cases here...
+    # Implementing test cases here...
 
     ######################################################################
     # ROOT ENDPOINT TEST CASES
@@ -188,7 +188,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(new_inventory["condition"], test_inventory.condition)
         self.assertEqual(new_inventory["restock_level"], test_inventory.restock_level)
 
-        # Todo: have uncommented the code below as get inventory is implemented
+        # have uncommented the code below as get inventory is implemented
         # Check that the location header was correct
         response = self.client.get(location)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
