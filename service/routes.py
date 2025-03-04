@@ -94,11 +94,10 @@ def get_inventory(inventory_id):
     app.logger.info(f"Fetch inventory item with ID {inventory_id}")
 
     inventory = Inventory.find(inventory_id)
-
     if not inventory:
         return jsonify({"error": "Inventory item not found"}), status.HTTP_404_NOT_FOUND
+    app.logger.info("Returning item: %s", inventory.name)
     return jsonify(inventory.serialize()), status.HTTP_200_OK
-
 
 # CREATE INVENTORY
 ######################################################################
