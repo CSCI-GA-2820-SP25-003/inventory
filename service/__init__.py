@@ -26,7 +26,6 @@ from service import config
 from service.common import log_handlers
 
 # Initialize database
-db = SQLAlchemy()
 migrate = Migrate()
 
 
@@ -42,6 +41,7 @@ def create_app():
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel
     from service.models import db
+
     db.init_app(app)
     migrate.init_app(app, db)
 
@@ -50,13 +50,6 @@ def create_app():
         # pylint: disable=wrong-import-position, wrong-import-order, unused-import
         from service import routes, models  # noqa: F401 E402
         from service.common import error_handlers, cli_commands  # noqa: F401, E402
-
-        try:
-            db.create_all()
-        except Exception as error:  # pylint: disable=broad-except
-            app.logger.critical("%s: Cannot continue", error)
-            # gunicorn requires exit code 4 to stop spawning workers when they die
-            sys.exit(4)
 
         # Set up logging for production
         log_handlers.init_logging(app, "gunicorn.error")
