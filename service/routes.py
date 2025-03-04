@@ -20,12 +20,11 @@ YourResourceModel Service
 This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
-
+from sqlalchemy import text
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
 from service.models import Inventory, db
 from service.common import status  # HTTP Status Codes
-from sqlalchemy import text
 
 
 ######################################################################
@@ -50,7 +49,7 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
+# Implementing REST API code here ...
 
 ######################################################################
 
@@ -65,7 +64,7 @@ def health_check():
     try:
         db.session.execute(text("SELECT 1;"))
         return jsonify({"status": "OK"}), status.HTTP_200_OK
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return (
             jsonify({"status": "ERROR", "message": str(e)}),
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -122,7 +121,7 @@ def create_inventory():
     app.logger.info("Inventory with new id [%s] saved!", inventory.id)
 
     # Return the location of the new Inventory
-    # Todo: uncomment this code when get_inventory is implemented
+    # get_inventory is implemented
     location_url = url_for("get_inventory", inventory_id=inventory.id, _external=True)
     # location_url = "/"
 

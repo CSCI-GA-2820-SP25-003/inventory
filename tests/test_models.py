@@ -22,9 +22,11 @@ Test cases for Pet Model
 import os
 import logging
 from unittest import TestCase
+from sqlalchemy import inspect
 from wsgi import app
 from service.models import Inventory, DataValidationError, db
 from .factories import InventoryModelFactory
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -98,7 +100,7 @@ class TestInventoryModel(TestCase):
             "product_id": 1234,
             "quantity": 10,
             "condition": "New",
-            "restock_level": 5
+            "restock_level": 5,
         }
         inv = Inventory()
         inv.deserialize(data)
@@ -115,7 +117,7 @@ class TestInventoryModel(TestCase):
             "product_id": 1234,
             "quantity": 10,
             "condition": "New",
-            "restock_level": 5
+            "restock_level": 5,
         }
         inv = Inventory()
         with self.assertRaises(DataValidationError):
@@ -185,11 +187,17 @@ class TestInventoryModel(TestCase):
 
     def test_inventory_schema(self):
         """It should have the expected columns in the Inventory table"""
-        from sqlalchemy import inspect
         inspector = inspect(db.engine)
         columns = inspector.get_columns("inventory")
         column_names = [column["name"] for column in columns]
-        expected = ["id", "name", "product_id", "quantity", "condition", "restock_level"]
+        expected = [
+            "id",
+            "name",
+            "product_id",
+            "quantity",
+            "condition",
+            "restock_level",
+        ]
         for col in expected:
             self.assertIn(col, column_names)
 
@@ -200,7 +208,8 @@ class TestInventoryModel(TestCase):
         # Force commit to fail by monkey-patching commit
 
         def failing_commit():
-            raise Exception("Forced commit failure")
+            raise RuntimeError("Forced commit failure")
+
         db.session.commit = failing_commit
         with self.assertRaises(DataValidationError) as context:
             inv.create()
@@ -216,7 +225,8 @@ class TestInventoryModel(TestCase):
         # Force commit failure on update
 
         def failing_commit():
-            raise Exception("Forced update failure")
+            raise RuntimeError("Forced update failure")
+
         db.session.commit = failing_commit
         with self.assertRaises(DataValidationError) as context:
             inv.update()
@@ -231,7 +241,8 @@ class TestInventoryModel(TestCase):
         # Force commit failure on delete
 
         def failing_commit():
-            raise Exception("Forced delete failure")
+            raise RuntimeError("Forced delete failure")
+
         db.session.commit = failing_commit
         with self.assertRaises(DataValidationError) as context:
             inv.delete()
