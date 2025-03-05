@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-Test cases for Pet Model
+Test cases for Inventory Model
 """
 
 # pylint: disable=duplicate-code
