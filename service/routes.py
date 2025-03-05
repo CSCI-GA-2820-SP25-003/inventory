@@ -75,8 +75,29 @@ def index():
 
 @app.route("/inventory", methods=["GET"])
 def list_inventory():
-    """Minimal implementation: List all inventory items"""
-    return jsonify([]), status.HTTP_200_OK  # Only returns an empty list
+    """Returns all inventory items"""
+    app.logger.info("Request for inventory list")
+
+    items = []
+
+    # Parse any arguments from the query string
+
+    name = request.args.get("name")
+    product_id = request.args.get("product_id")
+
+    if name:
+        app.logger.info("Find by name: %s", name)
+        items = Inventory.find_by_name(name)
+    elif product_id:
+        app.logger.info("Find by product_id: %s", product_id)
+        items = Inventory.find_by_product_id(int(product_id))
+    else:
+        app.logger.info("Find all inventory items")
+        items = Inventory.all()
+
+    results = [item.serialize() for item in items]
+    app.logger.info("Returning %d inventory items", len(results))
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
