@@ -117,6 +117,8 @@ def get_inventory(inventory_id):
 
 # CREATE INVENTORY
 ######################################################################
+
+
 @app.route("/inventory", methods=["POST"])
 def create_inventory():
     """
