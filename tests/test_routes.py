@@ -140,6 +140,7 @@ class TestYourResourceService(TestCase):
     ######################################################################
     # LIST INVENTORY TEST CASES
     ######################################################################
+
     def test_list_inventory(self):
         """It should List all Inventory items"""
         # Ensure there are no items first
@@ -147,6 +148,59 @@ class TestYourResourceService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertIsInstance(data, list)  # Should return a list
+        self.assertEqual(len(data), 0)  # Ensure list is empty when no items exist
+
+    def test_list_inventory_with_items(self):
+        """It should return all inventory items in the database"""
+        for _ in range(3):
+            item = InventoryModelFactory()
+            item.create()
+
+        # Call GET /inventory
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Validate response contains exactly 3 items
+        data = response.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 3)
+
+    def test_list_inventory_filter_by_name(self):
+        """It should return inventory items filtered by name"""
+
+        # Create inventory items
+        item1 = InventoryModelFactory(name="Bucket")
+        item1.create()
+        item2 = InventoryModelFactory(name="Hat")
+        item2.create()
+
+        # Call GET /inventory with name filter
+        response = self.client.get(BASE_URL, query_string={"name": "Bucket"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Validate response contains only 1 item with name "Widget"
+        data = response.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Bucket")
+
+    def test_list_inventory_filter_by_product_id(self):
+        """It should return inventory items filtered by product_id"""
+
+        item1 = InventoryModelFactory(product_id=1001)
+        item1.create()
+        item2 = InventoryModelFactory(product_id=1002)
+        item2.create()
+
+        # Call GET /inventory with product_id filter
+        response = self.client.get(BASE_URL, query_string={"product_id": 1001})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Validate response contains only one item with product_id 1001
+        data = response.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["product_id"], 1001)
 
     ######################################################################
     # READ INVENTORY TEST CASES

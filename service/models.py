@@ -126,6 +126,12 @@ class Inventory(db.Model):
         return cls.query.session.get(cls, by_id)
 
     @classmethod
+    def find_by_product_id(cls, product_id):
+        """Returns all Inventory items with the given product_id"""
+        logger.info("Processing product_id query for %s ...", product_id)
+        return cls.query.filter(cls.product_id == product_id)
+
+    @classmethod
     def find_by_name(cls, name):
         """Returns all Inventory items with the given name
 
