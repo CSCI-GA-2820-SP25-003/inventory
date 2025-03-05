@@ -3,21 +3,24 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-This is a skeleton you can use to start your projects.
+# Inventory Microservice
 
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
+This microservice is responsible for managing inventory in an eCommerce website. It follows RESTful API principles and supports CRUD operations for inventory items.
 
-## Overview
+## Features:
+- Create a new inventory item
+- Read details of an inventory item
+- Update an inventory item
+- Delete an inventory item
+- List all inventory items
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+### Installation & Setup
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/CSCI-GA-2820-SP25-003/inventory.git
+   cd inventory
 
-## Automatic Setup
-
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
-
-## Manual Setup
-
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
+## Setup
 
 There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
 
@@ -59,6 +62,11 @@ tests/                     - test cases package
 ├── test_models.py         - test suite for business models
 └── test_routes.py         - test suite for service routes
 ```
+
+## API Endpoints
+
+
+## Running Tests
 
 ## License
 
