@@ -26,6 +26,23 @@ from flask import current_app as app  # Import Flask application
 from service.models import Inventory, db
 from service.common import status  # HTTP Status Codes
 
+######################################################################
+# HEALTH CHECK INVENTORY
+######################################################################
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Check if service is healthy"""
+    try:
+        db.session.execute(text("SELECT 1;"))
+        return jsonify({"status": "OK"}), status.HTTP_200_OK
+    except (ValueError, TypeError) as e:
+        return (
+            jsonify({"status": "ERROR", "message": str(e)}),
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 
 ######################################################################
 # GET INDEX
@@ -50,26 +67,6 @@ def index():
 ######################################################################
 
 # Implementing REST API code here ...
-
-######################################################################
-
-######################################################################
-# HEALTH CHECK INVENTORY
-######################################################################
-
-
-@app.route("/health", methods=["GET"])
-def health_check():
-    """Check if service is healthy"""
-    try:
-        db.session.execute(text("SELECT 1;"))
-        return jsonify({"status": "OK"}), status.HTTP_200_OK
-    except (ValueError, TypeError) as e:
-        return (
-            jsonify({"status": "ERROR", "message": str(e)}),
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
 
 ######################################################################
 # LIST INVENTORY
