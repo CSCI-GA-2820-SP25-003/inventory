@@ -68,11 +68,11 @@ GET /inventory: List all inventory items
 
 POST /inventory/: Create a new inventory item
 
-GET /inventory/<id>: Retrieve a specific inventory item by ID
+GET /inventory/{id}: Retrieve a specific inventory item by ID
 
-PUT /inventory/<id>: Update a specific inventory item by ID
+PUT /inventory/{id}: Update a specific inventory item by ID
 
-DELETE /inventory/<id>: Delete a specific inventory item by ID
+DELETE /inventory/{id}: Delete a specific inventory item by ID
 
 ## Running Tests
 Tests can be run using pytest through the Makefile from within the container:
