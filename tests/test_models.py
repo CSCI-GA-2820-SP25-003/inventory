@@ -153,6 +153,16 @@ class TestInventoryModel(TestCase):
         deleted_inv = Inventory.find(original_id)
         self.assertIsNone(deleted_inv)
 
+    def test_list_inventory_items(self):
+        """It should List all inventory items in the database"""
+        items = Inventory.all()
+        self.assertEqual(items, [])
+        for _ in range(5):
+            item = InventoryModelFactory()
+            item.create()
+        items = Inventory.all()
+        self.assertEqual(len(items), 5)
+
     def test_find_inventory(self):
         """It should find an Inventory record by ID"""
         inv = InventoryModelFactory()
@@ -190,6 +200,14 @@ class TestInventoryModel(TestCase):
         inspector = inspect(db.engine)
         columns = inspector.get_columns("inventory")
         column_names = [column["name"] for column in columns]
+        expected = [
+            "id",
+            "name",
+            "product_id",
+            "quantity",
+            "condition",
+            "restock_level",
+        ]
         expected = [
             "id",
             "name",
