@@ -104,6 +104,7 @@ def list_inventory():
 # READ INVENTORY
 ######################################################################
 
+
 @app.route("/inventory/<int:inventory_id>", methods=["GET"])
 def get_inventory(inventory_id):
     """Minimal implementation: Retrieve a single inventory item"""
@@ -114,6 +115,7 @@ def get_inventory(inventory_id):
         return jsonify({"error": "Inventory item not found"}), status.HTTP_404_NOT_FOUND
     app.logger.info("Returning item: %s", inventory.name)
     return jsonify(inventory.serialize()), status.HTTP_200_OK
+
 
 # CREATE INVENTORY
 ######################################################################
@@ -219,30 +221,30 @@ def update_inventory(inventory_id):
 ######################################################################
 # DELETE INVENTORY
 ######################################################################
+
+
 @app.route("/inventory/<int:inventory_id>", methods=["DELETE"])
 def delete_inventory(inventory_id):
     """
     Delete an Inventory Item
     This endpoint will delete an Inventory Item based on its id
     """
-    app.logger.info("Request to Delete an Inventory item with id [%s]", inventory_id)
+    app.logger.info("Request to delete an inventory item with id [%s]", inventory_id)
 
     # Find the Inventory item
     inventory = Inventory.find(inventory_id)
-    if not inventory:
-        app.logger.warning("Inventory item with ID: %d not found.", inventory_id)
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Inventory item with id {inventory_id} not found",
+    if inventory:
+        app.logger.info("Inventory item with ID: %d found, deleting...", inventory.id)
+        inventory.delete()
+        app.logger.info(
+            "Inventory item with ID: %d deleted successfully.", inventory_id
         )
-        # return jsonify({"error": "Inventory item not found"}), status.HTTP_404_NOT_FOUND
+    else:
+        app.logger.warning(
+            "Inventory item with ID: %d not found. DELETE is idempotent, so returning 204_NO_CONTENT.",
+            inventory_id,
+        )
 
-    # Delete the inventory item
-    app.logger.info("Inventory item with ID: %d found, deleting...", inventory.id)
-    inventory.delete()
-    app.logger.info("Inventory item with ID: %d deleted successfully.", inventory_id)
-
-    # return jsonify({"message": "Inventory item deleted successfully"}), status.HTTP_204_NO_CONTENT
     return "", status.HTTP_204_NO_CONTENT
 
 
