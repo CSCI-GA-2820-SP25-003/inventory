@@ -373,7 +373,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_non_existing_inventory(self):
-        """It should return 404 when trying to delete a non-existing item"""
+        """It should return 204 when trying to delete a non-existing item"""
         response = self.client.delete(f"{BASE_URL}/0")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("error", response.get_json())
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)  # Ensure no content is returned
