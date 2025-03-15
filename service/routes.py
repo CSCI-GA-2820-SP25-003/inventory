@@ -23,7 +23,7 @@ and Delete YourResourceModel
 from sqlalchemy import text
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Inventory, db
+from service.models import Inventory, db, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 ######################################################################
@@ -161,60 +161,40 @@ def create_inventory():
 def update_inventory(inventory_id):
     """
     Update an existing Inventory item.
-    Expected JSON payload may include any or all of:
-       - name (string)
-       - product_id (int)
-       - quantity (int, non-negative)
-       - condition (one of ["New", "Used", "Open-Box"])
-       - restock_level (int, non-negative)
+
+    This endpoint will:
+      1) Find an existing Inventory item by `inventory_id`.
+      2) Merge any provided fields (like `name`, `quantity`, etc.)
+         with the existing values.
+      3) Validate the merged data via `item.deserialize(...)`.
+      4) Update the database record if valid, or return 400 if invalid.
+
     Returns:
-       - 404 if the item doesn't exist.
-       - 400 if the JSON payload is invalid.
-       - 200 with the updated item in JSON if successful.
+      A JSON representation of the updated Inventory item, or
+      404 if the item does not exist, or 400 if validation fails.
     """
-    # Retrieve the Inventory item by ID.
     item = Inventory.find(inventory_id)
     if not item:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Inventory item with id {inventory_id} not found.",
-        )
-
-    # Ensure the request has JSON content.
+        abort(status.HTTP_404_NOT_FOUND, f"Inventory item with id {inventory_id} not found.")
     if not request.is_json:
         abort(status.HTTP_400_BAD_REQUEST, "Request payload must be in JSON format")
     data = request.get_json()
 
-    # Helper function to update a field if present, with optional validation.
-    def update_field(field, validator=None, error_msg="Invalid data"):
-        if field in data:
-            value = data[field]
-            if validator and not validator(value):
-                abort(status.HTTP_400_BAD_REQUEST, error_msg)
-            setattr(item, field, value)
+    # Merge the incoming update with existing fields
+    updated_data = {
+        "name": data.get("name", item.name),
+        "product_id": data.get("product_id", item.product_id),
+        "quantity": data.get("quantity", item.quantity),
+        "condition": data.get("condition", item.condition),
+        "restock_level": data.get("restock_level", item.restock_level),
+    }
 
-    update_field("name")
-    update_field("product_id")
-    update_field(
-        "quantity",
-        lambda v: isinstance(v, int) and v >= 0,
-        "Invalid quantity; must be a non-negative integer",
-    )
-    update_field(
-        "condition",
-        lambda v: v in ["New", "Used", "Open-Box"],
-        "Invalid condition. Must be one of ['New', 'Used', 'Open-Box']",
-    )
-    update_field(
-        "restock_level",
-        lambda v: isinstance(v, int) and v >= 0,
-        "Invalid restock_level; must be a non-negative integer",
-    )
+    try:
+        item.deserialize(updated_data)
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
 
-    # Commit changes
     item.update()
-
-    # Return updated item
     return jsonify(item.serialize()), status.HTTP_200_OK
 
 

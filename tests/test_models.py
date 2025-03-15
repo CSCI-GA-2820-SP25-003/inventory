@@ -129,6 +129,49 @@ class TestInventoryModel(TestCase):
         with self.assertRaises(DataValidationError):
             inv.deserialize("this is not a dictionary")
 
+    def test_name_exceeds_length(self):
+        """It should raise DataValidationError when name exceeds 63 characters"""
+        long_name = "X" * 64  # 64 characters
+        data = {
+            "name": long_name,
+            "product_id": 1234,
+            "quantity": 10,
+            "condition": "New",
+            "restock_level": 5,
+        }
+        inv = Inventory()
+        with self.assertRaises(DataValidationError) as context:
+            inv.deserialize(data)
+        self.assertIn("Name exceeds 63-character limit", str(context.exception))
+
+    def test_negative_quantity(self):
+        """It should raise DataValidationError when quantity is negative"""
+        data = {
+            "name": "ValidName",
+            "product_id": 1234,
+            "quantity": -1,  # negative
+            "condition": "New",
+            "restock_level": 5,
+        }
+        inv = Inventory()
+        with self.assertRaises(DataValidationError) as context:
+            inv.deserialize(data)
+        self.assertIn("Quantity cannot be negative", str(context.exception))
+
+    def test_negative_restock_level(self):
+        """It should raise DataValidationError when restock_level is negative"""
+        data = {
+            "name": "ValidName",
+            "product_id": 1234,
+            "quantity": 10,
+            "condition": "New",
+            "restock_level": -5,  # negative
+        }
+        inv = Inventory()
+        with self.assertRaises(DataValidationError) as context:
+            inv.deserialize(data)
+        self.assertIn("Restock level cannot be negative", str(context.exception))
+
     def test_update_inventory(self):
         """It should update an existing Inventory record"""
         inv = InventoryModelFactory()

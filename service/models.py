@@ -91,22 +91,28 @@ class Inventory(db.Model):
             data (dict): A dictionary containing the resource data
         """
         try:
+            # Validate required fields
             self.name = data["name"]
             self.product_id = data["product_id"]
-            self.quantity = data.get("quantity", 0)
             self.condition = data["condition"]
+
+            self.name = data["name"]
+            if len(self.name) > 63:
+                raise DataValidationError("Name exceeds 63-character limit")
+            # Validate quantity
+            self.quantity = data.get("quantity", 0)
+            if self.quantity < 0:
+                raise DataValidationError("Quantity cannot be negative")
+            # Validate restock level
             self.restock_level = data.get("restock_level", 10)
-        except AttributeError as error:
-            raise DataValidationError("Invalid attribute: " + error.args[0]) from error
-        except KeyError as error:
-            raise DataValidationError(
-                "Invalid Inventory: missing " + error.args[0]
-            ) from error
-        except TypeError as error:
-            raise DataValidationError(
-                "Invalid Inventory: body of request contained bad or no data "
-                + str(error)
-            ) from error
+            if self.restock_level < 0:
+                raise DataValidationError("Restock level cannot be negative")
+            # Validate condition values
+            valid_conditions = ["New", "Open-Box", "Used"]
+            if self.condition not in valid_conditions:
+                raise DataValidationError(f"Invalid condition: {self.condition}")
+        except (KeyError, AttributeError, TypeError) as error:
+            raise DataValidationError("Invalid inventory data") from error
         return self
 
     ##################################################
