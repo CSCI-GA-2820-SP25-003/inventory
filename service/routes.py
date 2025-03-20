@@ -81,9 +81,17 @@ def list_inventory():
     items = []
 
     # Parse any arguments from the query string
-
     name = request.args.get("name")
     product_id = request.args.get("product_id")
+    condition = request.args.get("condition")
+    below_restock_level = request.args.get("below_restock_level")
+
+    # Validate query parameters
+    valid_params = {"name", "product_id", "condition", "below_restock_level"}
+    invalid_params = set(request.args.keys()) - valid_params
+    if invalid_params:
+        app.logger.error("Invalid query parameters: %s", invalid_params)
+        return jsonify({"error": f"Invalid query parameters: {invalid_params}"}), status.HTTP_400_BAD_REQUEST
 
     if name:
         app.logger.info("Find by name: %s", name)
@@ -91,6 +99,12 @@ def list_inventory():
     elif product_id:
         app.logger.info("Find by product_id: %s", product_id)
         items = Inventory.find_by_product_id(int(product_id))
+    elif condition:
+        app.logger.info("Find by condition: %s", condition)
+        items = Inventory.find_by_condition(condition)
+    elif below_restock_level and below_restock_level.lower() == "true":
+        app.logger.info("Find items below restock level")
+        items = Inventory.find_below_restock_level()
     else:
         app.logger.info("Find all inventory items")
         items = Inventory.all()

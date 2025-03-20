@@ -202,6 +202,53 @@ class TestYourResourceService(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["product_id"], 1001)
 
+    def test_list_inventory_filter_by_condition(self):
+        """It should return inventory items filtered by condition"""
+        # Create inventory items with different conditions
+        item1 = InventoryModelFactory(condition="New")
+        item1.create()
+        item2 = InventoryModelFactory(condition="Used")
+        item2.create()
+
+        # Test filtering by "New" condition
+        response = self.client.get(BASE_URL, query_string={"condition": "New"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["condition"], "New")
+
+        # Test filtering by "Used" condition
+        response = self.client.get(BASE_URL, query_string={"condition": "Used"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["condition"], "Used")
+
+    def test_list_inventory_filter_by_below_restock_level(self):
+        """It should return inventory items that need restocking"""
+        # Create inventory items with different quantities and restock levels
+        item1 = InventoryModelFactory(quantity=5, restock_level=10)  # Below restock level
+        item1.create()
+        item2 = InventoryModelFactory(quantity=15, restock_level=10)  # Above restock level
+        item2.create()
+
+        # Test filtering items below restock level
+        response = self.client.get(BASE_URL, query_string={"below_restock_level": "true"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["quantity"], 5)
+        self.assertEqual(data[0]["restock_level"], 10)
+
+    def test_list_inventory_invalid_query_parameter(self):
+        """It should return 400 Bad Request for invalid query parameters"""
+        response = self.client.get(BASE_URL, query_string={"invalid_param": "value"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid query parameters", response.get_json()["error"])
+
     ######################################################################
     # READ INVENTORY TEST CASES
     ######################################################################
