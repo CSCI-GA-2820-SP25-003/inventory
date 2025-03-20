@@ -146,3 +146,19 @@ class Inventory(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
+
+    @classmethod
+    def find_by_condition(cls, condition):
+        """Returns all Inventory items with the given condition
+
+        Args:
+            condition (string): the condition of the Inventory items you want to match
+        """
+        logger.info("Processing condition query for %s ...", condition)
+        return cls.query.filter(cls.condition == condition)
+
+    @classmethod
+    def find_below_restock_level(cls):
+        """Returns all Inventory items that need restocking (quantity below restock_level)"""
+        logger.info("Processing below restock level query ...")
+        return cls.query.filter(cls.quantity < cls.restock_level)
