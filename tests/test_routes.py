@@ -25,7 +25,8 @@ from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
 from service.common import status
-from service.models import db, Inventory
+from service.models import db, Inventory, DataValidationError
+from service.routes import check_content_type
 from .factories import InventoryModelFactory
 
 DATABASE_URI = os.getenv(
@@ -377,3 +378,101 @@ class TestYourResourceService(TestCase):
         response = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)  # Ensure no content is returned
+    ######################################################################
+    # Restock Alert and Update Restock Level Test Cases
+    ######################################################################
+
+    def test_restock_item_not_found(self):
+        """It should return 404 if the inventory item doesn't exist"""
+        resp = self.client.post("/inventory/9999/restock_level", json={"quantity": 5})
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        data = resp.get_json()
+        self.assertIn("Inventory item not found", data["error"])
+
+    def test_restock_not_json(self):
+        """It should return 400 if the payload is not JSON"""
+        test_inventory = self._create_inventory()
+        resp = self.client.post(
+            f"/inventory/{test_inventory.id}/restock_level",
+            data="not json",
+            content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_restock_invalid_quantity_value(self):
+        """It should return 400 if 'quantity' cannot be parsed as an integer"""
+        test_inventory = self._create_inventory()
+        resp = self.client.post(
+            f"/inventory/{test_inventory.id}/restock_level",
+            json={"quantity": "ten"}  # not an integer
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        data = resp.get_json()
+        self.assertIn("Invalid quantity provided", data["error"])
+
+    @patch("service.models.Inventory.update", side_effect=DataValidationError("Forced update failure"))
+    def test_restock_forced_500(self, _):
+        """It should return 500 Internal Server Error if update fails unexpectedly"""
+        test_inventory = self._create_inventory()
+        resp = self.client.post(
+            f"/inventory/{test_inventory.id}/restock_level",
+            json={"quantity": 5}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        data = resp.get_json()
+        self.assertIn("Forced update failure", data["message"])
+
+    def test_restock_auto_update(self):
+        """It should update the stock level when 'quantity' is provided"""
+        test_inventory = self._create_inventory()
+        # Force known quantity to 15
+        update_data = {"quantity": 15, "restock_level": 10}
+        update_resp = self.client.put(f"/inventory/{test_inventory.id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
+
+        # Now add 27 more
+        resp = self.client.post(
+            f"/inventory/{test_inventory.id}/restock_level",
+            json={"quantity": 27}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["message"], "Stock level updated")
+        self.assertEqual(data["new_stock"], 15 + 27)
+
+    def test_restock_alert_triggered(self):
+        """It should trigger a restock alert if stock is below restock_level and no quantity is provided"""
+        test_inventory = self._create_inventory()
+        # Force quantity to 0, restock_level to 10 so it's below threshold
+        update_data = {"quantity": 0, "restock_level": 10}
+        update_resp = self.client.put(f"/inventory/{test_inventory.id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
+
+        # No quantity in POST, should trigger alert
+        resp = self.client.post(f"/inventory/{test_inventory.id}/restock_level", json={})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["message"], "Restock alert triggered")
+
+    def test_restock_no_action_needed(self):
+        """It should return a 'no action needed' message if stock is above restock_level"""
+        test_inventory = self._create_inventory()
+        # Force quantity above restock_level
+        update_data = {"quantity": 20, "restock_level": 10}
+        update_resp = self.client.put(f"/inventory/{test_inventory.id}", json=update_data)
+        self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
+
+        # No quantity in POST, should say no action is needed
+        resp = self.client.post(f"/inventory/{test_inventory.id}/restock_level", json={})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["message"], "Stock level is above the restock threshold. No action needed.")
+
+    def test_check_content_type_correct(self):
+        """It should pass check_content_type if Content-Type is correct."""
+        with app.test_request_context(
+            "/inventory",
+            method="POST",
+            headers={"Content-Type": "application/json"}
+        ):
+            check_content_type("application/json")
