@@ -241,10 +241,64 @@ def delete_inventory(inventory_id):
 
     return "", status.HTTP_204_NO_CONTENT
 
+######################################################################
+# Restock Alert and Stock Update
+######################################################################
+
+
+@app.route("/inventory/<int:inventory_id>/restock_level", methods=["POST"])
+def restock_inventory(inventory_id):
+    """
+    Trigger a restock alert or update stock levels for an inventory item.
+
+    If a 'quantity' is provided in the JSON payload, update the stock level.
+    Otherwise, check if the current stock is below the restock threshold:
+      - If below threshold, trigger a restock alert.
+      - If not, return a message that no action is needed.
+
+    Returns:
+      JSON response confirming the action or alert, or an error if the item is not found.
+    """
+    # Validate the inventory item exists
+    item = Inventory.find(inventory_id)
+    if not item:
+        return jsonify({"error": "Inventory item not found"}), status.HTTP_404_NOT_FOUND
+
+    if not request.is_json:
+        abort(status.HTTP_400_BAD_REQUEST, "Request payload must be in JSON format")
+    data = request.get_json()
+
+    # If quantity is provided, update the stock level
+    if "quantity" in data:
+        try:
+            additional_stock = int(data["quantity"])
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid quantity provided"}), status.HTTP_400_BAD_REQUEST
+
+        item.quantity += additional_stock
+        try:
+            item.update()
+        except DataValidationError as error:
+            abort(status.HTTP_500_INTERNAL_SERVER_ERROR, str(error))
+
+        # Re-fetch the item from the database to ensure we have the updated value
+        updated_item = Inventory.find(item.id)
+        return jsonify({
+            "message": "Stock level updated",
+            "new_stock": updated_item.quantity
+        }), status.HTTP_200_OK
+
+    # If no quantity provided, check if stock is below restock threshold
+    if item.quantity < item.restock_level:
+        # Trigger a restock alert (here we simply return a message)
+        return jsonify({"message": "Restock alert triggered"}), status.HTTP_200_OK
+    return jsonify({"message": "Stock level is above the restock threshold. No action needed."}), status.HTTP_200_OK
 
 ######################################################################
 # Checks the ContentType of a request
 ######################################################################
+
+
 def check_content_type(content_type) -> None:
     """Checks that the media type is correct"""
     if "Content-Type" not in request.headers:
