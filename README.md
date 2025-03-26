@@ -3,24 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-# Inventory Microservice
-
-This microservice is responsible for managing inventory in an eCommerce website. It follows RESTful API principles and supports CRUD operations for inventory items.
-
-## Features:
-- Create a new inventory item
-- Read details of an inventory item
-- Update an inventory item
-- Delete an inventory item
-- List all inventory items
-
-### Installation & Setup
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/CSCI-GA-2820-SP25-003/inventory.git
-   cd inventory
-
-## Setup
+## Manual Setup
 
 There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
 
@@ -63,22 +46,227 @@ tests/                     - test cases package
 └── test_routes.py         - test suite for service routes
 ```
 
-## API Endpoints
-GET /inventory: List all inventory items
+## Inventory Microservice Overview
 
-POST /inventory/: Create a new inventory item
+This microservice is responsible for managing inventory in an eCommerce website. It follows RESTful API principles and supports CRUD operations for inventory items.
 
-GET /inventory/{id}: Retrieve a specific inventory item by ID
+### Features
 
-PUT /inventory/{id}: Update a specific inventory item by ID
+- Create a new inventory item
+- Read details of an inventory item
+- Update an inventory item
+- Delete an inventory item
+- List all inventory items
 
-DELETE /inventory/{id}: Delete a specific inventory item by ID
+### Installation & Setup
+
+#### Prerequisites
+
+- Install Docker
+  
+- Install VS Code with the DevContainers extension
+  
+#### Running the Project
+
+- Clone this repository:
+  
+   ```bash
+   git clone https://github.com/CSCI-GA-2820-SP25-003/inventory.git
+   cd inventory
+
+- Open the project in VS Code.
+  
+- When prompted, reopen in a DevContainer.
+
+
+### API Endpoints
+
+- **GET** `/inventory`  
+  List all inventory items.
+
+- **POST** `/inventory/`  
+  Create a new inventory item.
+
+- **GET** `/inventory/{id}`  
+  Retrieve a specific inventory item by ID.
+
+- **PUT** `/inventory/{id}`  
+  Update a specific inventory item by ID.
+
+- **DELETE** `/inventory/{id}`  
+  Delete a specific inventory item by ID.
+
+### Enhanced Query Parameters
+
+- **GET** `/inventory?name=ItemName`  
+  Filter inventory by item name.
+
+- **GET** `/inventory?product_id=123`  
+  Filter inventory by product ID.
+
+- **GET** `/inventory?condition=New`  
+  Filter inventory by condition (`New`, `Used`, etc.).
+
+- **GET** `/inventory?below_restock_level=true`  
+  Retrieve only inventory items that are below their restock level.
+
+## Usage Examples with `curl`
+
+### Create a new inventory item
+
+```bash
+curl -X POST http://localhost:8080/inventory \
+     -H "Content-Type: application/json" \
+     -d '{
+           "name": "Laptop",
+           "product_id": 1001,
+           "quantity": 4,
+           "condition": "New",
+           "restock_level": 5
+         }'
+```
+
+### List all inventory items
+
+```bash
+curl http://localhost:8080/inventory
+```
+
+### Get a specific inventory item by ID
+
+```bash
+curl http://localhost:8080/inventory/1
+```
+
+### Update an inventory item:
+
+```bash
+curl -X PUT http://localhost:8080/inventory/1 \
+     -H "Content-Type: application/json" \
+     -d '{
+           "name": "UpdatedName",
+           "product_id": 1001,
+           "quantity": 8,
+           "condition": "Used",
+           "restock_level": 3
+         }'
+```
+
+### Delete an inventory item
+
+```bash
+curl -X DELETE http://localhost:8080/inventory/1
+```
+
+## Enhanced Feature Examples
+
+### Find items below their restock level
+
+```bash
+curl http://localhost:8080/inventory?below_restock_level=true
+```
+
+### Filter inventory by name
+
+```bash
+curl http://localhost:8080/inventory?name=Laptop
+```
+
+### Filter inventory by condition
+
+```bash
+curl http://localhost:8080/inventory?condition=Used
+```
+
+### Filter inventory by product_id
+
+```bash
+curl http://localhost:8080/inventory?product_id=1001
+```
 
 ## Running Tests
-Tests can be run using pytest through the Makefile from within the container:
-make install
-make test
 
+Tests can be run using pytest through the Makefile from within the container: make install make test
+
+## Kubernetes Local Development Commands
+
+Initialize the Cluster
+
+```text
+make cluster
+```
+
+Map the cluster-registry to 127.0.0.1
+
+```text
+sudo bash -c "echo '127.0.0.1 cluster-registry' >> /etc/hosts"
+```
+
+Build and Push the Docker Image
+
+```text
+# Build Docker image
+docker build -t inventory:1.0 .
+
+# Tag it for the local cluster registry
+docker tag inventory:1.0 cluster-registry:5000/nyu-devops/inventory:1.0.0
+
+# Push the image to the local registry
+docker push cluster-registry:5000/nyu-devops/inventory:1.0.0
+```
+
+Deploy PostgreSQL and the Microservice
+
+```text
+# Apply PostgreSQL manifests
+kubectl apply -f k8s/postgres/pv.yaml
+kubectl apply -f k8s/postgres/secret.yaml
+kubectl apply -f k8s/postgres/statefulset.yaml
+kubectl apply -f k8s/postgres/pvc.yaml
+kubectl apply -f k8s/postgres/service.yaml
+
+# Apply inventory microservice manifests
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+Verify the Deployment
+
+```text
+kubectl get all
+kubectl get pods
+kubectl get ingress
+```
+
+After resources have been deployed, test that the microservice is running by accessing the /health endpoint.
+
+```text
+# Port-forward to test the /health endpoint
+kubectl port-forward svc/inventory 8080:8080
+
+#If port 8080 is already in use on your system, use a different local port (e.g. 8081):
+kubectl port-forward svc/inventory 8081:8080
+
+# In a new terminal or tab:
+curl http://localhost:8080/health
+```
+
+Make sure  ingress.yaml correctly routes /health to the inventory service on port 8080
+
+Expected Output:
+
+```text
+{ "status": "OK" }
+```
+
+Cleanup Commands:
+
+```text
+kubectl delete -f k8s/postgres/
+kubectl delete -f k8s/
+make cluster-rm
+```
 
 ## License
 
