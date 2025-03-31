@@ -6,3 +6,4 @@ pytest-cov
 flake8
 pylint
 pytest-pspec
+psycopg
