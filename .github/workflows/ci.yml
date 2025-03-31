@@ -1,0 +1,47 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt || true
+        pip install -e .  # installs the package
+        pip install pytest pytest-cov flake8 pylint
+
+    - name: Run lint checks (flake8)
+      run: |
+        echo "Running flake8 lint checks..."
+        flake8 service tests
+
+    - name: Run pylint
+      run: |
+        echo "Running pylint on service/..."
+        pylint service || true  # fail gracefully if needed
+
+    - name: Run tests with coverage
+      run: |
+        echo "Running tests..."
+        pytest --cov=service --cov-fail-under=95
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}

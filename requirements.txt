@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+pytest
+pytest-cov
+flake8
+pylint
