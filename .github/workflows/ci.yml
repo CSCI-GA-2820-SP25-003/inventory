@@ -43,6 +43,13 @@ jobs:
           # Run pylint on the service
           pylint service tests --max-line-length=127
 
+
+      - name: Initialize the database
+        run: flask db-create
+        env:
+          FLASK_APP: "wsgi:app"
+          DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/postgres"
+
       - name: Run tests with coverage
         env:
           FLASK_APP: "wsgi:app"
