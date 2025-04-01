@@ -1,0 +1,68 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    container: python:3.11-slim
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: pgs3cr3t
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Python package dependencies
+        run: |
+          python -m pip install -U pip pipenv
+          pipenv install --system --dev
+      
+      - name: Run Code Quality(flake8 & pylint) Checks
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          # check for complexity. The GitHub editor is 127 chars wide
+          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+          # Run pylint on the service
+          pylint service tests --max-line-length=127
+
+
+      - name: Initialize the database
+        run: flask db-create
+        env:
+          FLASK_APP: "wsgi:app"
+          DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/postgres"
+
+      - name: Run tests with coverage
+        env:
+          FLASK_APP: "wsgi:app"
+          DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/postgres"
+        run: |
+          echo "Running tests..."
+          pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
+
+      - name: Install packages for Codecov to work
+        run: apt-get update && apt-get install -y git curl gpg
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: CSCI-GA-2820-SP25-003/inventory
