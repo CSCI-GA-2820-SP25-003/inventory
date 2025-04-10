@@ -21,14 +21,14 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
 from sqlalchemy import text
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request, url_for
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields, reqparse, inputs
 from werkzeug.exceptions import (
     NotFound,
     UnsupportedMediaType,
-    MethodNotAllowed,
     InternalServerError,
+    BadRequest,
 )
 from service.models import Inventory, db, DataValidationError
 from service.common import status  # HTTP Status Codes
@@ -292,8 +292,8 @@ class RestockResource(Resource):
         if "quantity" in data:
             try:
                 additional_stock = int(data["quantity"])
-            except (ValueError, TypeError):
-                raise BadRequest("Invalid quantity provided")
+            except (ValueError, TypeError) as exc:
+                raise BadRequest("Invalid quantity provided") from exc
 
             item.quantity += additional_stock
             try:
@@ -303,8 +303,7 @@ class RestockResource(Resource):
                 app.logger.error(
                     f"Unexpected error while updating inventory: {error_message}"
                 )
-                raise InternalServerError(error_message)
-
+                raise InternalServerError(error_message) from error
             updated_item = Inventory.find(item.id)
             return {
                 "message": "Stock level updated",
