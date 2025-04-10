@@ -686,3 +686,47 @@ class TestYourResourceService(TestCase):
         ):  # Wrong Content-Type
             with self.assertRaises(BadRequest):
                 check_content_type("application/json")
+
+    def test_final_coverage_push(self):
+        """Test to catch the remaining uncovered lines in coverage tests"""
+
+        # Content-Type missing in PUT
+        item = self._create_inventory()
+        resp = self.client.put(
+            f"{BASE_URL}/{item.id}",
+            data="not json",
+            # Deliberately omit Content-Type header
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        # Line 170: PUT with wrong content type
+        resp = self.client.put(
+            f"{BASE_URL}/{item.id}",
+            data="not json",
+            headers={"Content-Type": "text/plain"},
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        # POST with missing Content-Type
+        test_data = {"name": "Coverage Test", "product_id": 999, "condition": "New"}
+        resp = self.client.post(
+            BASE_URL,
+            data=str(test_data),
+            # Deliberately omit Content-Type header
+        )
+        self.assertEqual(resp.status_code, 415)
+
+        # RestockResource _validate_request_format
+        item = self._create_inventory()
+        resp = self.client.post(
+            f"{BASE_URL}/{item.id}/restock_level",
+            # Deliberately send without Content-Type header
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        # Test different branches of check_content_type
+        with app.test_request_context(headers={}):
+            try:
+                check_content_type("application/json")
+            except BadRequest as e:
+                self.assertIn("must be application/json", str(e))
