@@ -628,3 +628,61 @@ class TestYourResourceService(TestCase):
                     content_type="application/json",
                 )
                 self.assertEqual(resp.status_code, 500)
+
+    def test_additional_coverage(self):
+        """Test coverage for uncovered lines in routes.py"""
+
+        # Test health_check error handling (lines 90-92)
+        with patch(
+            "service.routes.db.session.execute", side_effect=ValueError("DB Error")
+        ):
+            resp = self.client.get("/health")
+            self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(resp.get_json()["status"], "ERROR")
+
+        # Test put method content type validation (lines 154, 170)
+        item = self._create_inventory()
+        resp = self.client.put(
+            f"{BASE_URL}/{item.id}", headers={}, data="not json"  # Missing Content-Type
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        # Test post method content type validation (line 284)
+        resp = self.client.post(
+            BASE_URL, headers={}, data="not json"  # Missing Content-Type
+        )
+        self.assertEqual(resp.status_code, 415)
+
+        # Test _get_inventory_item (lines 306-307)
+        resp = self.client.post(
+            f"{BASE_URL}/999999/restock_level",
+            json={"quantity": 5},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 404)
+
+        # Test _process_quantity_update exception (line 374)
+        with patch(
+            "service.models.Inventory.find", return_value=InventoryModelFactory()
+        ):
+            with patch(
+                "service.models.Inventory.update",
+                side_effect=DataValidationError("Update error"),
+            ):
+                resp = self.client.post(
+                    f"{BASE_URL}/1/restock_level",
+                    json={"quantity": 5},
+                    content_type="application/json",
+                )
+                self.assertEqual(resp.status_code, 500)
+
+        # Test check_content_type function (lines 428-433)
+        with app.test_request_context(headers={}):  # No Content-Type header
+            with self.assertRaises(BadRequest):
+                check_content_type("application/json")
+
+        with app.test_request_context(
+            headers={"Content-Type": "text/plain"}
+        ):  # Wrong Content-Type
+            with self.assertRaises(BadRequest):
+                check_content_type("application/json")
