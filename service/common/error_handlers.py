@@ -22,19 +22,17 @@ from werkzeug.exceptions import (
     NotFound,
     MethodNotAllowed,
     UnsupportedMediaType,
+    BadRequest,
 )
-from service.routes import api
 from service.models import DataValidationError
 from . import status
-
 
 ######################################################################
 # Error Handlers
 ######################################################################
 
 
-# For custom exceptions, use Flask-RESTX's @api.errorhandler
-@api.errorhandler(DataValidationError)
+@app.errorhandler(DataValidationError)
 def handle_data_validation_error(error):
     """Handles DataValidationError exceptions by returning a 400 response."""
     message = str(error)
@@ -46,15 +44,30 @@ def handle_data_validation_error(error):
     }, status.HTTP_400_BAD_REQUEST
 
 
-@api.errorhandler(Exception)
+@app.errorhandler(BadRequest)
+def handle_bad_request(error):
+    """Handles BadRequest exceptions by returning a 400 response."""
+    message = str(error)
+    app.logger.error(message)
+    return {
+        "status": status.HTTP_400_BAD_REQUEST,
+        "error": "Bad Request",
+        "message": message,
+    }, status.HTTP_400_BAD_REQUEST
+
+
+@app.errorhandler(Exception)
 def handle_unexpected_exceptions(error):
     """Handles all uncaught exceptions by returning a 500 response."""
     app.logger.error(f"Internal Server Error: {error}")
-    return {
-        "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        "error": "Internal Server Error",
-        "message": "An unexpected error occurred.",
-    }, status.HTTP_500_INTERNAL_SERVER_ERROR
+    return (
+        jsonify(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            error="Internal Server Error",
+            message=str(error),
+        ),
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
 
 
 ######################################################################
@@ -73,7 +86,7 @@ def not_found(error):
             error="Not Found",
             message=message,
         ),
-        404,
+        status.HTTP_404_NOT_FOUND,
     )
 
 
@@ -88,7 +101,7 @@ def method_not_allowed(error):
             error="Method Not Allowed",
             message=message,
         ),
-        405,
+        status.HTTP_405_METHOD_NOT_ALLOWED,
     )
 
 
@@ -99,9 +112,9 @@ def unsupported_media_type(error):
     app.logger.warning(message)
     return (
         jsonify(
-            status=415,
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             error="Unsupported Media Type",
             message=message,
         ),
-        415,
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
     )
