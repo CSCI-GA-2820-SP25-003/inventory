@@ -730,3 +730,49 @@ class TestYourResourceService(TestCase):
                 check_content_type("application/json")
             except BadRequest as e:
                 self.assertIn("must be application/json", str(e))
+
+    def test_exact_coverage(self):
+        """Test specifically targeting exact line numbers reported by codecov"""
+
+        # Direct test of line 154 (Content-Type check in PUT)
+        item = self._create_inventory()
+        headers = {}  # Explicitly empty headers to ensure no Content-Type
+        resp = self.client.put(f"{BASE_URL}/{item.id}", headers=headers, data="{}")
+        self.assertEqual(resp.status_code, 400)
+
+        # Direct test of line 170 (JSON validation in PUT)
+        resp = self.client.put(
+            f"{BASE_URL}/{item.id}",
+            headers={"Content-Type": "application/json"},
+            data="This is not JSON",  # Not properly formatted JSON
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        # Direct test of line 284 (UnsupportedMediaType in POST)
+        # Try without ANY headers to ensure hit this code path
+        resp = self.client.post(BASE_URL, headers=None, data="{}")
+        self.assertEqual(resp.status_code, 415)
+
+        # Direct test of lines 306-307 (_get_inventory_item in RestockResource)
+        # Test with a non-existent ID to ensure we hit the not found path
+        resp = self.client.post(
+            f"{BASE_URL}/99999999/restock_level",
+            json={"quantity": 5},
+            headers={"Content-Type": "application/json"},
+        )
+        self.assertEqual(resp.status_code, 404)
+
+        # Direct test of line 374 (Exception in _process_quantity_update)
+        # Create an item and then force an update error
+        item = self._create_inventory()
+        with patch(
+            "service.models.Inventory.update",
+            side_effect=DataValidationError("Test error"),
+        ):
+            resp = self.client.post(
+                f"{BASE_URL}/{item.id}/restock_level",
+                json={"quantity": 5},
+                headers={"Content-Type": "application/json"},
+            )
+            self.assertEqual(resp.status_code, 500)
+            self.assertIn("Test error", resp.get_json().get("message", ""))
