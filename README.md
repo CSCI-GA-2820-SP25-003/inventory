@@ -83,33 +83,33 @@ This microservice is responsible for managing inventory in an eCommerce website.
 
 ### API Endpoints
 
-- **GET** `/inventory`  
+- **GET** `/api/inventory`  
   List all inventory items.
 
-- **POST** `/inventory/`  
+- **POST** `/api/inventory/`  
   Create a new inventory item.
 
-- **GET** `/inventory/{id}`  
+- **GET** `/api/inventory/{id}`  
   Retrieve a specific inventory item by ID.
 
-- **PUT** `/inventory/{id}`  
+- **PUT** `/api/inventory/{id}`  
   Update a specific inventory item by ID.
 
-- **DELETE** `/inventory/{id}`  
+- **DELETE** `/api/inventory/{id}`  
   Delete a specific inventory item by ID.
 
 ### Enhanced Query Parameters
 
-- **GET** `/inventory?name=ItemName`  
+- **GET** `/api/inventory?name=ItemName`  
   Filter inventory by item name.
 
-- **GET** `/inventory?product_id=123`  
+- **GET** `/api/inventory?product_id=123`  
   Filter inventory by product ID.
 
-- **GET** `/inventory?condition=New`  
+- **GET** `/api/inventory?condition=New`  
   Filter inventory by condition (`New`, `Used`, etc.).
 
-- **GET** `/inventory?below_restock_level=true`  
+- **GET** `/api/inventory?below_restock_level=true`  
   Retrieve only inventory items that are below their restock level.
 
 ## Usage Examples with `curl`
@@ -117,7 +117,7 @@ This microservice is responsible for managing inventory in an eCommerce website.
 ### Create a new inventory item
 
 ```bash
-curl -X POST http://localhost:8080/inventory \
+curl -X POST http://localhost:8080/api/inventory \
      -H "Content-Type: application/json" \
      -d '{
            "name": "Laptop",
@@ -131,19 +131,19 @@ curl -X POST http://localhost:8080/inventory \
 ### List all inventory items
 
 ```bash
-curl http://localhost:8080/inventory
+curl http://localhost:8080/apiinventory
 ```
 
 ### Get a specific inventory item by ID
 
 ```bash
-curl http://localhost:8080/inventory/1
+curl http://localhost:8080/api/inventory/1
 ```
 
 ### Update an inventory item:
 
 ```bash
-curl -X PUT http://localhost:8080/inventory/1 \
+curl -X PUT http://localhost:8080/api/inventory/1 \
      -H "Content-Type: application/json" \
      -d '{
            "name": "UpdatedName",
@@ -157,7 +157,7 @@ curl -X PUT http://localhost:8080/inventory/1 \
 ### Delete an inventory item
 
 ```bash
-curl -X DELETE http://localhost:8080/inventory/1
+curl -X DELETE http://localhost:8080/api/inventory/1
 ```
 
 ## Enhanced Feature Examples
@@ -165,25 +165,25 @@ curl -X DELETE http://localhost:8080/inventory/1
 ### Find items below their restock level
 
 ```bash
-curl http://localhost:8080/inventory?below_restock_level=true
+curl http://localhost:8080/api/inventory?below_restock_level=true
 ```
 
 ### Filter inventory by name
 
 ```bash
-curl http://localhost:8080/inventory?name=Laptop
+curl http://localhost:8080/api/inventory?name=Laptop
 ```
 
 ### Filter inventory by condition
 
 ```bash
-curl http://localhost:8080/inventory?condition=Used
+curl http://localhost:8080/api/inventory?condition=Used
 ```
 
 ### Filter inventory by product_id
 
 ```bash
-curl http://localhost:8080/inventory?product_id=1001
+curl http://localhost:8080/api/inventory?product_id=1001
 ```
 
 ## Running Tests
@@ -269,6 +269,117 @@ kubectl delete -f k8s/postgres/
 kubectl delete -f k8s/
 make cluster-rm
 ```
+
+## Swagger Documentation
+
+This project provides interactive API documentation using Swagger UI, available at the `/apidocs` endpoint. The Swagger interface allows you to explore and test all API endpoints without writing any code. The Swagger documentation makes development and testing much easier by providing a clear interface to interact with all API endpoints.
+
+### Accessing Swagger UI
+
+- Start the application
+- Navigate to `http://localhost:8080/apidocs` in your browser
+- You'll see a complete list of API endpoints with their descriptions
+
+### Understanding the Interface
+
+- **Base URL**: Note that all endpoints are prefixed with `/api` (displayed at the top as `Base URL: /api`)
+- **Endpoints:** Grouped under the "inventory" section
+- **Models**: Available in a dropdown section at the bottom of the page
+- **Authorization**: Available in the top-right corner if needed
+
+### Testing Endpoints Step-by-Step
+  
+#### Listing Inventory Items (GET)
+
+1. Expand the `GET /inventory` endpoint
+2. Click "Try it out"
+3. You can add optional query parameters:
+   - `name` - Filter by item name
+   - `product_id` - Filter by product ID
+   - `condition` - Filter by condition (New, Used)
+   - `below_restock_level` - Set to "true" to find items below restock threshold
+4. Click "Execute"
+5. The response will show all matching inventory items
+
+#### Creating New Items (POST)
+
+1. Expand the POST `/inventory` endpoint
+2. Click "Try it out"
+3. In the request body editor, enter a valid inventory item JSON:
+
+    ```json
+   {
+     "name": "Test Product",
+     "product_id": 12345,
+     "quantity": 10,
+     "condition": "New",
+     "restock_level": 5
+   }
+4. Click "Execute"
+
+5. A successful response will return status 201 and the created item with its new ID
+
+#### Retrieving Single Items (GET)
+
+1. Expand the `GET /inventory/{inventory_id}` endpoint
+2. Click "Try it out"
+3. Enter an existing inventory ID in the inventory_id field
+4. Click "Execute"
+5. The response will contain the details of that specific inventory item
+
+#### Updating Items (PUT)
+
+1. Expand the `PUT /inventory/{inventory_id}` endpoint
+2. Click "Try it out"
+3. Enter an existing inventory ID in the inventory_id field
+4. In the request body, provide the updated values:
+
+   ```json
+   {
+     "name": "Updated Name",
+     "quantity": 15,
+     "condition": "Used",
+     "restock_level": 8
+   }
+
+    Note: You only need to include fields you want to update
+
+5. Click "Execute"
+
+6. A successful response will return status 200 and the updated item
+
+#### Deleting Items (DELETE)
+
+1. Expand the  `DELETE /inventory/{inventory_id}` endpoint
+2. Click "Try it out"
+3. Enter an existing inventory ID in the inventory_id field
+4. Click "Execute"
+5. A successful deletion will return a 204 No Content response
+
+#### Using the Restock Action (POST)
+
+1. Expand the `POST /inventory/{inventory_id}/restock_level` endpoint
+2. Click "Try it out"
+3. Enter an existing inventory ID in the inventory_id field
+4. In the request body, you have two options:
+
+   For adding more items to inventory:
+
+   ```json
+   {
+     "quantity": 10
+   }
+
+For checking restock status without adding items:
+
+  ```json
+{}
+```
+
+Click "Execute"
+If adding items, the response will show "Stock level updated" and the new quantity
+
+If checking status, it will indicate if a restock is needed or not
 
 ## License
 
