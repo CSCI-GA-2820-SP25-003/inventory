@@ -37,10 +37,10 @@ from service.common.error_handlers import (
     handle_data_validation_error,
     handle_unexpected_exceptions,
 )
-from wsgi import app
 from service.common import status
 from service.models import db, Inventory, DataValidationError
 from service.routes import check_content_type
+from wsgi import app
 from .factories import InventoryModelFactory
 
 DATABASE_URI = os.getenv(
@@ -569,38 +569,35 @@ class TestYourResourceService(TestCase):
         """Test coverage for error handlers"""
 
         # Test NotFound handler
-        response, status_code = not_found(NotFound("Not found test"))
+        _, status_code = not_found(NotFound("Not found test"))
         self.assertEqual(status_code, 404)
 
         # Test MethodNotAllowed handler
-        response, status_code = method_not_allowed(MethodNotAllowed("GET", ["POST"]))
+        _, status_code = method_not_allowed(MethodNotAllowed("GET", ["POST"]))
         self.assertEqual(status_code, 405)
 
         # Test UnsupportedMediaType handler
-        response, status_code = unsupported_media_type(
+        _, status_code = unsupported_media_type(
             UnsupportedMediaType("Unsupported media")
         )
         self.assertEqual(status_code, 415)
 
         # Test BadRequest handler
-        response, status_code = handle_bad_request(BadRequest("Bad request test"))
+        _, status_code = handle_bad_request(BadRequest("Bad request test"))
         self.assertEqual(status_code, 400)
 
         # Test DataValidationError handler
-        response, status_code = handle_data_validation_error(
+        _, status_code = handle_data_validation_error(
             DataValidationError("Data validation error")
         )
         self.assertEqual(status_code, 400)
 
         # Test unexpected exception handler
-        response, status_code = handle_unexpected_exceptions(
-            Exception("Unexpected error")
-        )
+        _, status_code = handle_unexpected_exceptions(Exception("Unexpected error"))
         self.assertEqual(status_code, 500)
 
     def test_routes_coverage(self):
         """Test coverage for routes.py"""
-        from unittest.mock import patch
 
         # Test delete with exception
         with patch(
