@@ -32,7 +32,7 @@ from .factories import InventoryModelFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-BASE_URL = "/inventory"
+BASE_URL = "/api/inventory"
 
 
 ######################################################################
@@ -121,8 +121,8 @@ class TestYourResourceService(TestCase):
         metadata = resp.get_json()
         self.assertEqual(metadata["service"], "inventory-service")
         self.assertEqual(metadata["version"], "1.0")
-        self.assertIn("/inventory", metadata["endpoints"])
-        self.assertIn("/inventory/{id}", metadata["endpoints"])
+        self.assertIn("/api/inventory", metadata["endpoints"])
+        self.assertIn("/api/inventory/{id}", metadata["endpoints"])
         self.assertIn("/health", metadata["endpoints"])
 
     ######################################################################
@@ -230,13 +230,19 @@ class TestYourResourceService(TestCase):
     def test_list_inventory_filter_by_below_restock_level(self):
         """It should return inventory items that need restocking"""
         # Create inventory items with different quantities and restock levels
-        item1 = InventoryModelFactory(quantity=5, restock_level=10)  # Below restock level
+        item1 = InventoryModelFactory(
+            quantity=5, restock_level=10
+        )  # Below restock level
         item1.create()
-        item2 = InventoryModelFactory(quantity=15, restock_level=10)  # Above restock level
+        item2 = InventoryModelFactory(
+            quantity=15, restock_level=10
+        )  # Above restock level
         item2.create()
 
         # Test filtering items below restock level
-        response = self.client.get(BASE_URL, query_string={"below_restock_level": "true"})
+        response = self.client.get(
+            BASE_URL, query_string={"below_restock_level": "true"}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertIsInstance(data, list)
@@ -248,7 +254,7 @@ class TestYourResourceService(TestCase):
         """It should return 400 Bad Request for invalid query parameters"""
         response = self.client.get(BASE_URL, query_string={"invalid_param": "value"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Invalid query parameters", response.get_json()["error"])
+        self.assertIn("Invalid query parameters", response.get_json()["message"])
 
     ######################################################################
     # READ INVENTORY TEST CASES
@@ -313,7 +319,7 @@ class TestYourResourceService(TestCase):
             "condition": "New",
             "restock_level": 3,
         }
-        create_resp = self.client.post("/inventory", json=new_item)
+        create_resp = self.client.post("/api/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         item_id = create_resp.get_json()["id"]
 
@@ -323,7 +329,7 @@ class TestYourResourceService(TestCase):
             "condition": "Used",
             "restock_level": 2,
         }
-        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        update_resp = self.client.put(f"/api/inventory/{item_id}", json=update_data)
         self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
         updated_item = update_resp.get_json()
         self.assertEqual(updated_item["name"], "UpdatedName")
@@ -346,12 +352,12 @@ class TestYourResourceService(TestCase):
             "condition": "New",
             "restock_level": 3,
         }
-        create_resp = self.client.post("/inventory", json=new_item)
+        create_resp = self.client.post("/api/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         item_id = create_resp.get_json()["id"]
 
         update_data = {"quantity": -10}
-        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        update_resp = self.client.put(f"/api/inventory/{item_id}", json=update_data)
         self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_inventory_invalid_condition(self):
@@ -363,12 +369,12 @@ class TestYourResourceService(TestCase):
             "condition": "New",
             "restock_level": 3,
         }
-        create_resp = self.client.post("/inventory", json=new_item)
+        create_resp = self.client.post("/api/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         item_id = create_resp.get_json()["id"]
 
         update_data = {"condition": "InvalidCondition"}
-        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        update_resp = self.client.put(f"/api/inventory/{item_id}", json=update_data)
         self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_inventory_invalid_restock_level(self):
@@ -380,12 +386,12 @@ class TestYourResourceService(TestCase):
             "condition": "New",
             "restock_level": 3,
         }
-        create_resp = self.client.post("/inventory", json=new_item)
+        create_resp = self.client.post("/api/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         item_id = create_resp.get_json()["id"]
 
         update_data = {"restock_level": -5}
-        update_resp = self.client.put(f"/inventory/{item_id}", json=update_data)
+        update_resp = self.client.put(f"/api/inventory/{item_id}", json=update_data)
         self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_inventory_non_json(self):
@@ -397,12 +403,12 @@ class TestYourResourceService(TestCase):
             "condition": "New",
             "restock_level": 3,
         }
-        create_resp = self.client.post("/inventory", json=new_item)
+        create_resp = self.client.post("/api/inventory", json=new_item)
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         item_id = create_resp.get_json()["id"]
 
         update_resp = self.client.put(
-            f"/inventory/{item_id}", data="not json", content_type="text/plain"
+            f"/api/inventory/{item_id}", data="not json", content_type="text/plain"
         )
         self.assertEqual(update_resp.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -425,16 +431,19 @@ class TestYourResourceService(TestCase):
         response = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)  # Ensure no content is returned
+
     ######################################################################
     # Restock Alert and Update Restock Level Test Cases
     ######################################################################
 
     def test_restock_item_not_found(self):
         """It should return 404 if the inventory item doesn't exist"""
-        resp = self.client.post("/inventory/9999/restock_level", json={"quantity": 5})
+        resp = self.client.post(
+            "/api/inventory/9999/restock_level", json={"quantity": 5}
+        )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         data = resp.get_json()
-        self.assertIn("Inventory item not found", data["error"])
+        self.assertIn("Inventory item not found", data["message"])
 
     def test_restock_not_json(self):
         """It should return 400 if the payload is not JSON"""
@@ -442,7 +451,7 @@ class TestYourResourceService(TestCase):
         resp = self.client.post(
             f"/inventory/{test_inventory.id}/restock_level",
             data="not json",
-            content_type="text/plain"
+            content_type="text/plain",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -451,19 +460,21 @@ class TestYourResourceService(TestCase):
         test_inventory = self._create_inventory()
         resp = self.client.post(
             f"/inventory/{test_inventory.id}/restock_level",
-            json={"quantity": "ten"}  # not an integer
+            json={"quantity": "ten"},  # not an integer
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         data = resp.get_json()
         self.assertIn("Invalid quantity provided", data["error"])
 
-    @patch("service.models.Inventory.update", side_effect=DataValidationError("Forced update failure"))
+    @patch(
+        "service.models.Inventory.update",
+        side_effect=DataValidationError("Forced update failure"),
+    )
     def test_restock_forced_500(self, _):
         """It should return 500 Internal Server Error if update fails unexpectedly"""
         test_inventory = self._create_inventory()
         resp = self.client.post(
-            f"/inventory/{test_inventory.id}/restock_level",
-            json={"quantity": 5}
+            f"/api/inventory/{test_inventory.id}/restock_level", json={"quantity": 5}
         )
         self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         data = resp.get_json()
@@ -474,13 +485,14 @@ class TestYourResourceService(TestCase):
         test_inventory = self._create_inventory()
         # Force known quantity to 15
         update_data = {"quantity": 15, "restock_level": 10}
-        update_resp = self.client.put(f"/inventory/{test_inventory.id}", json=update_data)
+        update_resp = self.client.put(
+            f"/api/inventory/{test_inventory.id}", json=update_data
+        )
         self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
 
         # Now add 27 more
         resp = self.client.post(
-            f"/inventory/{test_inventory.id}/restock_level",
-            json={"quantity": 27}
+            f"/inventory/{test_inventory.id}/restock_level", json={"quantity": 27}
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
@@ -492,11 +504,15 @@ class TestYourResourceService(TestCase):
         test_inventory = self._create_inventory()
         # Force quantity to 0, restock_level to 10 so it's below threshold
         update_data = {"quantity": 0, "restock_level": 10}
-        update_resp = self.client.put(f"/inventory/{test_inventory.id}", json=update_data)
+        update_resp = self.client.put(
+            f"/api/inventory/{test_inventory.id}", json=update_data
+        )
         self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
 
         # No quantity in POST, should trigger alert
-        resp = self.client.post(f"/inventory/{test_inventory.id}/restock_level", json={})
+        resp = self.client.post(
+            f"/api/inventory/{test_inventory.id}/restock_level", json={}
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["message"], "Restock alert triggered")
@@ -506,20 +522,27 @@ class TestYourResourceService(TestCase):
         test_inventory = self._create_inventory()
         # Force quantity above restock_level
         update_data = {"quantity": 20, "restock_level": 10}
-        update_resp = self.client.put(f"/inventory/{test_inventory.id}", json=update_data)
+        update_resp = self.client.put(
+            f"/api/inventory/{test_inventory.id}", json=update_data
+        )
         self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
 
         # No quantity in POST, should say no action is needed
-        resp = self.client.post(f"/inventory/{test_inventory.id}/restock_level", json={})
+        resp = self.client.post(
+            f"/api/inventory/{test_inventory.id}/restock_level", json={}
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(data["message"], "Stock level is above the restock threshold. No action needed.")
+        self.assertEqual(
+            data["message"],
+            "Stock level is above the restock threshold. No action needed.",
+        )
 
     def test_check_content_type_correct(self):
         """It should pass check_content_type if Content-Type is correct."""
         with app.test_request_context(
-            "/inventory",
+            "/api/inventory",
             method="POST",
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         ):
             check_content_type("application/json")
