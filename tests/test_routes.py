@@ -23,6 +23,20 @@ import os
 import logging
 from unittest import TestCase
 from unittest.mock import patch
+from werkzeug.exceptions import (
+    NotFound,
+    MethodNotAllowed,
+    UnsupportedMediaType,
+    BadRequest,
+)
+from service.common.error_handlers import (
+    not_found,
+    method_not_allowed,
+    unsupported_media_type,
+    handle_bad_request,
+    handle_data_validation_error,
+    handle_unexpected_exceptions,
+)
 from wsgi import app
 from service.common import status
 from service.models import db, Inventory, DataValidationError
@@ -449,7 +463,7 @@ class TestYourResourceService(TestCase):
         """It should return 400 if the payload is not JSON"""
         test_inventory = self._create_inventory()
         resp = self.client.post(
-            f"/inventory/{test_inventory.id}/restock_level",
+            f"/api/inventory/{test_inventory.id}/restock_level",
             data="not json",
             content_type="text/plain",
         )
@@ -459,7 +473,7 @@ class TestYourResourceService(TestCase):
         """It should return 400 if 'quantity' cannot be parsed as an integer"""
         test_inventory = self._create_inventory()
         resp = self.client.post(
-            f"/inventory/{test_inventory.id}/restock_level",
+            f"/api/inventory/{test_inventory.id}/restock_level",
             json={"quantity": "ten"},  # not an integer
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
@@ -492,7 +506,7 @@ class TestYourResourceService(TestCase):
 
         # Now add 27 more
         resp = self.client.post(
-            f"/inventory/{test_inventory.id}/restock_level", json={"quantity": 27}
+            f"/api/inventory/{test_inventory.id}/restock_level", json={"quantity": 27}
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
@@ -546,3 +560,74 @@ class TestYourResourceService(TestCase):
             headers={"Content-Type": "application/json"},
         ):
             check_content_type("application/json")
+
+    # Add these tests to test_routes.py
+
+    # Add these as methods inside the TestYourResourceService class
+
+    def test_error_handlers_coverage(self):
+        """Test coverage for error handlers"""
+
+        # Test NotFound handler
+        response, status_code = not_found(NotFound("Not found test"))
+        self.assertEqual(status_code, 404)
+
+        # Test MethodNotAllowed handler
+        response, status_code = method_not_allowed(MethodNotAllowed("GET", ["POST"]))
+        self.assertEqual(status_code, 405)
+
+        # Test UnsupportedMediaType handler
+        response, status_code = unsupported_media_type(
+            UnsupportedMediaType("Unsupported media")
+        )
+        self.assertEqual(status_code, 415)
+
+        # Test BadRequest handler
+        response, status_code = handle_bad_request(BadRequest("Bad request test"))
+        self.assertEqual(status_code, 400)
+
+        # Test DataValidationError handler
+        response, status_code = handle_data_validation_error(
+            DataValidationError("Data validation error")
+        )
+        self.assertEqual(status_code, 400)
+
+        # Test unexpected exception handler
+        response, status_code = handle_unexpected_exceptions(
+            Exception("Unexpected error")
+        )
+        self.assertEqual(status_code, 500)
+
+    def test_routes_coverage(self):
+        """Test coverage for routes.py"""
+        from unittest.mock import patch
+
+        # Test delete with exception
+        with patch(
+            "service.models.Inventory.find", side_effect=Exception("Test exception")
+        ):
+            resp = self.client.delete(f"{BASE_URL}/999")
+            self.assertEqual(resp.status_code, 204)
+
+        # Test invalid update request
+        item = self._create_inventory()
+        resp = self.client.put(
+            f"{BASE_URL}/{item.id}",
+            headers={},
+            data="invalid data",  # Missing Content-Type
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        # Test restock with exception
+        with patch(
+            "service.models.Inventory.find", return_value=InventoryModelFactory()
+        ):
+            with patch(
+                "service.models.Inventory.update", side_effect=Exception("Update error")
+            ):
+                resp = self.client.post(
+                    f"{BASE_URL}/{999}/restock_level",
+                    json={"quantity": 5},
+                    content_type="application/json",
+                )
+                self.assertEqual(resp.status_code, 500)
