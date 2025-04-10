@@ -188,7 +188,7 @@ class InventoryResource(Resource):
             item.update()
             return item.serialize(), status.HTTP_200_OK
         except DataValidationError as error:
-            raise BadRequest(str(error))
+            raise BadRequest(str(error)) from error
 
     @api.doc("delete_inventory")
     @api.response(204, "Inventory deleted")
@@ -208,7 +208,7 @@ class InventoryResource(Resource):
                     "Inventory item with ID: %d deleted successfully.", inventory_id
                 )
             return "", status.HTTP_204_NO_CONTENT
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             # Even if there's an error, return 204 for idempotency
             app.logger.error(f"Error deleting inventory: {str(e)}")
             return "", status.HTTP_204_NO_CONTENT
@@ -304,7 +304,7 @@ class InventoryCollection(Resource):
                 {"Location": location_url},
             )
         except DataValidationError as error:
-            raise BadRequest(str(error))
+            raise BadRequest(str(error)) from error
 
 
 ######################################################################
