@@ -18,6 +18,12 @@ Module: error_handlers
 """
 from flask import jsonify
 from flask import current_app as app  # Import Flask application
+from werkzeug.exceptions import (
+    NotFound,
+    MethodNotAllowed,
+    UnsupportedMediaType,
+)
+from service.routes import api
 from service.models import DataValidationError
 from . import status
 
@@ -25,93 +31,77 @@ from . import status
 ######################################################################
 # Error Handlers
 ######################################################################
-@app.errorhandler(DataValidationError)
-def request_validation_error(error):
-    """Handles Value Errors from bad data"""
-    return bad_request(error)
 
 
-@app.errorhandler(status.HTTP_400_BAD_REQUEST)
-def bad_request(error):
-    """Handles bad requests with 400_BAD_REQUEST"""
+# For custom exceptions, use Flask-RESTX's @api.errorhandler
+@api.errorhandler(DataValidationError)
+def handle_data_validation_error(error):
+    """Handles DataValidationError exceptions by returning a 400 response."""
     message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_400_BAD_REQUEST, error="Bad Request", message=message
-        ),
-        status.HTTP_400_BAD_REQUEST,
-    )
+    app.logger.error(message)
+    return {
+        "status": status.HTTP_400_BAD_REQUEST,
+        "error": "Bad Request",
+        "message": message,
+    }, status.HTTP_400_BAD_REQUEST
 
 
-@app.errorhandler(status.HTTP_404_NOT_FOUND)
-def not_found(error):
-    """Handles resources not found with 404_NOT_FOUND"""
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(status=status.HTTP_404_NOT_FOUND, error="Not Found", message=message),
-        status.HTTP_404_NOT_FOUND,
-    )
-
-
-@app.errorhandler(status.HTTP_405_METHOD_NOT_ALLOWED)
-def method_not_supported(error):
-    """Handles unsupported HTTP methods with 405_METHOD_NOT_SUPPORTED"""
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-            error="Method not Allowed",
-            message=message,
-        ),
-        status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
-
-
-@app.errorhandler(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-def mediatype_not_supported(error):
-    """Handles unsupported media requests with 415_UNSUPPORTED_MEDIA_TYPE"""
-    message = str(error)
-    app.logger.warning(message)
-    return (
-        jsonify(
-            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            error="Unsupported media type",
-            message=message,
-        ),
-        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-    )
-
-
-# handles 500 errors
-@app.errorhandler(status.HTTP_500_INTERNAL_SERVER_ERROR)
-def internal_server_error(error):
-    """Handles unexpected server errors(500 Internal Server Error)"""
-    message = str(error)
-    app.logger.error(f"Internal Server Error: {message}")
-    return (
-        jsonify(
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            error="Internal Server Error",
-            message=message,
-        ),
-        status.HTTP_500_INTERNAL_SERVER_ERROR,
-    )
-
-
-# added another handler to catch all unhandled exceptions
-# unexpected error results in a 500 Internal Server Error
-@app.errorhandler(Exception)
+@api.errorhandler(Exception)
 def handle_unexpected_exceptions(error):
-    """Handle unexpected exceptions"""
+    """Handles all uncaught exceptions by returning a 500 response."""
     app.logger.error(f"Internal Server Error: {error}")
+    return {
+        "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        "error": "Internal Server Error",
+        "message": "An unexpected error occurred.",
+    }, status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+######################################################################
+# Standard HTTP Code Handlers — use @app.errorhandler for integers
+######################################################################
+
+
+@app.errorhandler(NotFound)
+def not_found(error):
+    """Handles 404 Not Found"""
+    message = str(error)
+    app.logger.warning(message)
     return (
         jsonify(
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            error="Internal Server Error",
-            message="An unexpected error occurred",
+            status=404,
+            error="Not Found",
+            message=message,
         ),
-        status.HTTP_500_INTERNAL_SERVER_ERROR,
+        404,
+    )
+
+
+@app.errorhandler(MethodNotAllowed)
+def method_not_allowed(error):
+    """Handles 405 Method Not Allowed"""
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(
+            status=405,
+            error="Method Not Allowed",
+            message=message,
+        ),
+        405,
+    )
+
+
+@app.errorhandler(UnsupportedMediaType)
+def unsupported_media_type(error):
+    """Handles 415 Unsupported Media Type"""
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(
+            status=415,
+            error="Unsupported Media Type",
+            message=message,
+        ),
+        415,
     )
