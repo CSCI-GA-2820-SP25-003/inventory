@@ -782,4 +782,3 @@ class TestYourResourceService(TestCase):
         response = self.client.get('/inventory/create')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(b'Create New Inventory Item', response.data)
-        
