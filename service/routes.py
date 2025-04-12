@@ -540,4 +540,5 @@ def check_content_type(content_type):
 
 @app.route('/inventory/create', methods=['GET'])
 def create_inventory_page():
+    """Renders the create inventory item form page."""
     return render_template('create_inventory.html')
