@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
 from sqlalchemy import text
-from flask import jsonify, request, url_for, render_template
+from flask import jsonify, request, url_for
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields, reqparse, inputs
 from werkzeug.exceptions import (
@@ -536,9 +536,3 @@ def check_content_type(content_type):
     if request.headers["Content-Type"] != content_type:
         app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
         raise BadRequest(f"Content-Type must be {content_type}")
-
-
-@app.route('/inventory/create', methods=['GET'])
-def create_inventory_page():
-    """Renders the create inventory item form page."""
-    return render_template('create_inventory.html')

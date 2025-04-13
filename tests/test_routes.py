@@ -776,9 +776,3 @@ class TestYourResourceService(TestCase):
             )
             self.assertEqual(resp.status_code, 500)
             self.assertIn("Test error", resp.get_json().get("message", ""))
-
-    def test_create_inventory_page(self):
-        """It should render the create inventory form page"""
-        response = self.client.get('/inventory/create')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(b'Create New Inventory Item', response.data)
