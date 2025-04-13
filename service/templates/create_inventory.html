@@ -1,0 +1,120 @@
+<!-- service/templates/create_inventory.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Inventory Item</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        #success-message {
+            color: green;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f8f0;
+            border: 1px solid green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create New Inventory Item</h1>
+    <form id="create-inventory-form">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="product_id">Product ID:</label>
+            <input type="number" id="product_id" name="product_id" required>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" required>
+        </div>
+
+        <div class="form-group">
+            <label for="condition">Condition:</label>
+            <select id="condition" name="condition" required>
+                <option value="New">New</option>
+                <option value="Used">Used</option>
+                <option value="Open-Box">Open-Box</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="restock_level">Restock Level:</label>
+            <input type="number" id="restock_level" name="restock_level" required>
+        </div>
+
+        <button type="submit">Create</button>
+    </form>
+
+    <div id="success-message" style="display:none;">Item created successfully!</div>
+
+    <script>
+    document.getElementById('create-inventory-form').onsubmit = async function(event) {
+        event.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('name').value,
+            product_id: parseInt(document.getElementById('product_id').value),
+            quantity: parseInt(document.getElementById('quantity').value),
+            condition: document.getElementById('condition').value,
+            restock_level: parseInt(document.getElementById('restock_level').value)
+        };
+        
+        console.log('Submitting data:', formData);
+
+        try {
+            const response = await fetch('/api/inventory', {
+                method: 'POST',
+                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (response.ok) {
+                document.getElementById('success-message').style.display = 'block';
+                document.getElementById('create-inventory-form').reset();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Error data:', errorData);
+                alert('Creation failed: ' + (errorData.error || 'Please check your input'));
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('Error occurred: ' + error.message);
+        }
+    };
+    </script>
+</body>
+</html>
