@@ -46,11 +46,28 @@
 
     <div id="success-message" style="display:none;">Item created successfully!</div>
 
+    <h1>Inventory List</h1>
+    <button onclick="loadInventory()">Refresh Inventory</button>
+    <table border="1" id="inventory-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Product ID</th>
+          <th>Quantity</th>
+          <th>Condition</th>
+          <th>Restock Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Inventory items will be dynamically inserted here -->
+      </tbody>
+    </table>
+
     <script>
     document.getElementById('create-inventory-form').onsubmit = async function(event) {
         event.preventDefault();
         
-        // Collect form data
         const formData = {
             name: document.getElementById('name').value,
             product_id: parseInt(document.getElementById('product_id').value),
@@ -58,8 +75,6 @@
             condition: document.getElementById('condition').value,
             restock_level: parseInt(document.getElementById('restock_level').value)
         };
-        
-        console.log('Submitting data:', formData);
 
         try {
             const response = await fetch('/api/inventory', {
@@ -70,22 +85,50 @@
                 }
             });
 
-            console.log('Response status:', response.status);
-            
             if (response.ok) {
                 document.getElementById('success-message').style.display = 'block';
                 document.getElementById('create-inventory-form').reset();
+                loadInventory(); // Refresh list after successful creation
             } else {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('Error data:', errorData);
                 alert('Creation failed: ' + (errorData.error || 'Please check your input'));
             }
         } catch (error) {
-            console.error('Fetch error:', error);
             alert('Error occurred: ' + error.message);
         }
     };
+
+    async function loadInventory() {
+        try {
+            const response = await fetch('/api/inventory');
+            if (response.ok) {
+                const inventoryList = await response.json();
+                const tableBody = document.querySelector('#inventory-table tbody');
+                tableBody.innerHTML = ''; // Clear old data
+
+                inventoryList.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.product_id}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.condition}</td>
+                        <td>${item.restock_level}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                alert('Failed to load inventory.');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('Error loading inventory: ' + error.message);
+        }
+    }
+
+    // Load inventory on page load
+    window.onload = loadInventory;
     </script>
-    
   </body>
 </html>
