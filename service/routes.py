@@ -175,7 +175,7 @@ def index():
             {
                 "service": "inventory-service",
                 "version": "1.0",
-                "endpoints": ["/api/inventory", "/api/inventory/{id}", "/health", "/static/index.html"],
+                "endpoints": ["/api/inventory", "/api/inventory/{id}", "/health"],
             }
         ),
         status.HTTP_200_OK,
