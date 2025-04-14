@@ -537,6 +537,7 @@ def check_content_type(content_type):
         app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
         raise BadRequest(f"Content-Type must be {content_type}")
 
+
 @app.route('/inventory', methods=['GET'])
 def index_page():
     """Renders the index page."""
