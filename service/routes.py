@@ -167,20 +167,30 @@ def health_check():
 ######################################################################
 # GET INDEX
 ######################################################################
-@app.route("/", methods=["GET"])
-def index():
-    """Root URL response with service metadata"""
-    return (
-        jsonify(
-            {
-                "service": "inventory-service",
-                "version": "1.0",
-                "endpoints": ["/api/inventory", "/api/inventory/{id}", "/health"],
-            }
-        ),
-        status.HTTP_200_OK,
-    )
+@app.route("/")
+def root_metadata():
+    """
+    Returns service metadata for the Inventory Admin API.
 
+    This includes basic information like service name, version,
+    and a list of available API endpoints for discovery/documentation.
+    """
+    return jsonify({
+        "service": "inventory-service",
+        "version": "1.0",
+        "endpoints": ["/api/inventory", "/api/inventory/{id}", "/health"]
+    })
+
+
+@app.route("/ui")
+def index():
+    """
+    Renders the landing page for the Inventory Admin UI.
+
+    This route returns the index.html page from the templates folder,
+    serving as the main entry point for interacting with the inventory system.
+    """
+    return render_template("index.html")
 
 ######################################################################
 #  INVENTORY RESOURCE
