@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete YourResourceModel
 """
 from sqlalchemy import text
-from flask import jsonify, request, url_for, render_template
+from flask import jsonify, request, url_for  # render_template
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields, reqparse, inputs
 from werkzeug.exceptions import (
@@ -175,22 +175,39 @@ def root_metadata():
     This includes basic information like service name, version,
     and a list of available API endpoints for discovery/documentation.
     """
-    return jsonify({
-        "service": "inventory-service",
-        "version": "1.0",
-        "endpoints": ["/api/inventory", "/api/inventory/{id}", "/health"]
-    })
+    return jsonify(
+        {
+            "service": "inventory-service",
+            "version": "1.0",
+            "endpoints": [
+                "/inventory",
+                "/api/inventory",
+                "/api/inventory/{id}",
+                "/health",
+            ],
+        }
+    )
 
 
-@app.route("/ui")
-def index():
-    """
-    Renders the landing page for the Inventory Admin UI.
+######################################################################
+# GET INDEX(UI)
+######################################################################
+@app.route("/inventory")
+def index_page():
+    """Base URL for our service"""
+    return app.send_static_file("index.html")
 
-    This route returns the index.html page from the templates folder,
-    serving as the main entry point for interacting with the inventory system.
-    """
-    return render_template("index.html")
+
+# @app.route("/ui")
+# def index():
+#     """
+#     Renders the landing page for the Inventory Admin UI.
+
+#     This route returns the index.html page from the templates folder,
+#     serving as the main entry point for interacting with the inventory system.
+#     """
+#     return render_template("index.html")
+
 
 ######################################################################
 #  INVENTORY RESOURCE
@@ -548,7 +565,7 @@ def check_content_type(content_type):
         raise BadRequest(f"Content-Type must be {content_type}")
 
 
-@app.route('/inventory', methods=['GET'])
-def index_page():
-    """Renders the index page."""
-    return render_template('index.html')
+# @app.route('/inventory', methods=['GET'])
+# def index_page():
+#     """Renders the index page."""
+#     return render_template('index.html')

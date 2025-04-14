@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Inventory Demo RESTful Service</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="static/images/newapp-icon.png">
+    <link rel="stylesheet" href="static/css/cerulean_bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+          <h1>Inventory Demo REST API Service</h1>
+          <p><i>We have inventory of all shapes and sizes</i></p>
+      </div>
+
+      <!-- Flash Message -->
+      <div class="table-responsive">
+        <table class="table">
+          <tr><td>Status:</td><td><span id="flash_message"></span></td></tr>
+        </table>
+      </div>
+
+      <!-- FORM -->
+      <div class="col-md-12" id="form_data">
+        <h3>Create, Retrieve, Update, and Delete Inventory Items:</h3>
+        <div class="well">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="inventory_id">Inventory ID:</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="inventory_id" placeholder="Enter ID of Inventory Item">
+              </div>
+              <div class="col-sm-4">
+                <button type="submit" class="btn btn-primary" id="retrieve-btn">Retrieve</button>
+                
+                <!-- TODO: Delete Inventory Item UI  - Add delete button here -->
+                
+              </div>
+            </div>
+          </div> <!-- form horizontal -->
+
+          <div class="form-horizontal">
+            <!-- NAME -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="inventory_name">Name:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="inventory_name" placeholder="Enter name for inventory item">
+              </div>
+            </div>
+
+            <!-- PRODUCT ID -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="inventory_product_id">Product ID:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="inventory_product_id" placeholder="Enter product ID">
+              </div>
+            </div>
+
+            <!-- QUANTITY -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="inventory_quantity">Quantity:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="inventory_quantity" placeholder="Enter quantity">
+              </div>
+            </div>
+
+            <!-- CONDITION -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="inventory_condition">Condition:</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="inventory_condition">
+                  <option value="New" selected>New</option>
+                  <option value="Used">Used</option>
+                  <option value="Open-Box">Open-Box</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- RESTOCK LEVEL -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="inventory_restock_level">Restock Level:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="inventory_restock_level" placeholder="Enter restock level">
+              </div>
+            </div>
+
+            <!-- TODO: Query Inventory Items by Condition UI  - Add query fields here -->
+
+
+
+            <!-- TODO: Perform Action on Inventory Item UI  - Add restock fields here -->
+
+
+            <!-- SUBMIT BUTTONS -->
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-primary" id="clear-btn">Clear</button>
+                <button type="submit" class="btn btn-success" id="create-btn">Create</button>
+                <button type="submit" class="btn btn-primary" id="list-btn">List All</button>
+                
+                <!-- TODO: Update Inventory Item UI (Issue #39) - Add update button here -->
+                
+
+                <!-- TODO: Query Inventory Items by Condition UI  - Add search button here -->
+                
+
+                <!-- TODO: Perform Action on Inventory Item UI  - Add restock button here -->
+    
+              </div>
+            </div>
+          </div> <!-- form horizontal -->
+        </div> <!-- end well -->
+      </div> <!-- end Form -->
+
+      <!-- Search Results -->
+      <div class="table-responsive col-md-12" id="search_results">
+        <h3>Inventory Items</h3>
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th class="col-md-1">ID</th>
+            <th class="col-md-3">Name</th>
+            <th class="col-md-2">Product ID</th>
+            <th class="col-md-2">Quantity</th>
+            <th class="col-md-2">Condition</th>
+            <th class="col-md-2">Restock Level</th>
+          </tr>
+          </thead>
+          <tbody id="search_results_table">
+            <!-- Inventory items will be dynamically inserted here -->
+          </tbody>
+        </table>
+      </div>
+
+      <footer>
+        <br><br>
+        <p>API Documentation is <a href='/apidocs'>here</a></p>
+        <p>&copy; NYU DevOps Company 2025</p>
+      </footer>
+
+    </div> <!-- container -->
+
+  <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+
+  <!-- YOUR REST API -->
+  <script type="text/javascript" src="static/js/rest_api.js"></script>
+
+  </body>
+</html>
