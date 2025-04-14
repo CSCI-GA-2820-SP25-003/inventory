@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Inventory Shop</title>
+  </head>
+  <body>
+    <h1>Welcome to the Inventory Shop</h1>
+    <p><i>We have inventory of all shapes and sizes</i></p>
+    <img src="/static/images/pet-shop.png" alt="Dogs and cats" width="640" height="296">
+    <p>API Documentation is <a href='/apidocs'>here</a></p>
+
+    <h1>Create New Inventory Item</h1>
+    <form id="create-inventory-form">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="product_id">Product ID:</label>
+            <input type="number" id="product_id" name="product_id" required>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" required>
+        </div>
+
+        <div class="form-group">
+            <label for="condition">Condition:</label>
+            <select id="condition" name="condition" required>
+                <option value="New">New</option>
+                <option value="Used">Used</option>
+                <option value="Open-Box">Open-Box</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="restock_level">Restock Level:</label>
+            <input type="number" id="restock_level" name="restock_level" required>
+        </div>
+
+        <button type="submit">Create</button>
+    </form>
+
+    <div id="success-message" style="display:none;">Item created successfully!</div>
+
+    <script>
+    document.getElementById('create-inventory-form').onsubmit = async function(event) {
+        event.preventDefault();
+        
+        // Collect form data
+        const formData = {
+            name: document.getElementById('name').value,
+            product_id: parseInt(document.getElementById('product_id').value),
+            quantity: parseInt(document.getElementById('quantity').value),
+            condition: document.getElementById('condition').value,
+            restock_level: parseInt(document.getElementById('restock_level').value)
+        };
+        
+        console.log('Submitting data:', formData);
+
+        try {
+            const response = await fetch('/api/inventory', {
+                method: 'POST',
+                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (response.ok) {
+                document.getElementById('success-message').style.display = 'block';
+                document.getElementById('create-inventory-form').reset();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Error data:', errorData);
+                alert('Creation failed: ' + (errorData.error || 'Please check your input'));
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('Error occurred: ' + error.message);
+        }
+    };
+    </script>
+    
+  </body>
+</html>
