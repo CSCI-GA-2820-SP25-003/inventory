@@ -73,7 +73,42 @@ $(function () {
     // TODO: Update an Inventory Item
     // ****************************************
 
+    $("#update-btn").click(function () {
 
+        let inventory_id = $("#inventory_id").val();
+        let name = $("#inventory_name").val();
+        let product_id = parseInt($("#inventory_product_id").val());
+        let quantity = parseInt($("#inventory_quantity").val());
+        let condition = $("#inventory_condition").val();
+        let restock_level = parseInt($("#inventory_restock_level").val());
+    
+        let data = {
+            "name": name,
+            "product_id": product_id,
+            "quantity": quantity,
+            "condition": condition,
+            "restock_level": restock_level
+        };
+    
+        $("#flash_message").empty();
+    
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/api/inventory/${inventory_id}`,
+            contentType: "application/json",
+            data: JSON.stringify(data)
+        });
+    
+        ajax.done(function(res){
+            update_form_data(res);
+            flash_message("Success: Inventory item updated");
+        });
+    
+        ajax.fail(function(res){
+            flash_message("Error: " + res.responseJSON.message);
+        });
+    
+    });
 
 
     // ****************************************
