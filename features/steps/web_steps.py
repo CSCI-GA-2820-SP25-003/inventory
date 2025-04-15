@@ -2,8 +2,13 @@ from behave import given, when, then
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions
 import os
 import time
+
+ID_PREFIX = "inventory_"
 
 
 @given("I open the Inventory Admin UI")
@@ -17,6 +22,7 @@ def step_open_ui(context):
     context.driver = webdriver.Chrome(options=options)
     context.driver.get(base_url)
     time.sleep(1)
+
 
 @when('I enter "{value}" as the name')
 def step_enter_name(context, value):
@@ -65,7 +71,7 @@ def step_see_in_table(context, value):
     assert value in table.text
 
 
-@when('I grab the first inventory ID from the results table')
+@when("I grab the first inventory ID from the results table")
 def step_grab_id(context):
     table = context.driver.find_element(By.ID, "search_results_table")
     first_row = table.find_element(By.TAG_NAME, "tr")
@@ -75,7 +81,7 @@ def step_grab_id(context):
     print("DEBUG >>> Grabbed ID:", inventory_id)
 
 
-@when('I enter the grabbed inventory ID')
+@when("I enter the grabbed inventory ID")
 def step_enter_grabbed_id(context):
     field = context.driver.find_element(By.ID, "inventory_id")
     field.clear()
@@ -87,3 +93,24 @@ def step_verify_name(context, value):
     name = context.driver.find_element(By.ID, "inventory_name").get_attribute("value")
     print("DEBUG >>> Name field contains:", name)
     assert name == value
+
+
+@when('I change "{element_name}" to "{text_string}"')
+def step_impl(context, element_name, text_string):
+    element_id = "inventory_" + element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    element.clear()
+    element.send_keys(text_string)
+
+
+@then('I should see "{text_string}" in the "{element_name}" field')
+def step_impl(context, text_string, element_name):
+    element_id = "inventory_" + element_name.lower().replace(" ", "_")
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element_value(
+            (By.ID, element_id), text_string
+        )
+    )
+    assert found
