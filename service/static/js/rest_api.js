@@ -171,7 +171,39 @@ $(function () {
     // TODO: Perform Restock Action on Inventory Item
     // ****************************************
 
-
+// Perform Restock Action on Inventory Item
+$("#perform-action-btn").click(function () {
+    let inventory_id = $("#inventory_id").val();
+    let selected_action = $("#inventory_action").val();
+  
+    $("#flash_message").empty();
+  
+    if (!inventory_id) {
+      flash_message("Please enter an Inventory ID first.");
+      return;
+    }
+  
+    if (selected_action === "restock") {
+      let ajax = $.ajax({
+        type: "PUT",
+        url: `/inventory/${inventory_id}/restock`,
+        contentType: "application/json",
+        data: JSON.stringify({})  // no body content for restock
+      });
+  
+      ajax.done(function (res) {
+        update_form_data(res);
+        flash_message("Item marked as restocked successfully!");
+      });
+  
+      ajax.fail(function (res) {
+        flash_message(res.responseJSON.message);
+      });
+    } else {
+      flash_message("Invalid action selected.");
+    }
+  });
+    
     
 
     // ****************************************

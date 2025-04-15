@@ -96,7 +96,7 @@ def step_verify_name(context, value):
 
 
 @when('I change "{element_name}" to "{text_string}"')
-def step_impl(context, element_name, text_string):
+def step_update_item(context, element_name, text_string):
     element_id = "inventory_" + element_name.lower().replace(" ", "_")
     element = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.presence_of_element_located((By.ID, element_id))
@@ -106,7 +106,7 @@ def step_impl(context, element_name, text_string):
 
 
 @then('I should see "{text_string}" in the "{element_name}" field')
-def step_impl(context, text_string, element_name):
+def step_verify_item(context, text_string, element_name):
     element_id = "inventory_" + element_name.lower().replace(" ", "_")
     found = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.text_to_be_present_in_element_value(
@@ -114,3 +114,10 @@ def step_impl(context, text_string, element_name):
         )
     )
     assert found
+
+
+@when('I select "{text}" in the "{element_name}" dropdown')
+def step_select_dropdown_value(context, text, element_name):
+    element_id = "inventory_" + element_name.lower().replace(" ", "_")
+    select = Select(context.driver.find_element(By.ID, element_id))
+    select.select_by_visible_text(text)
