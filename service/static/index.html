@@ -71,9 +71,10 @@
               <label class="control-label col-sm-2" for="inventory_condition">Condition:</label>
               <div class="col-sm-10">
                 <select class="form-control" id="inventory_condition">
-                  <option value="New" selected>New</option>
-                  <option value="Used">Used</option>
-                  <option value="Open-Box">Open-Box</option>
+                  <option value="" selected></option>
+                  <option value="NEW">New</option>
+                  <option value="OPENED">Opened</option>
+                  <option value="USED">Used</option>
                 </select>
               </div>
             </div>
@@ -115,7 +116,7 @@
                 
 
                 <!-- TODO: Perform Action on Inventory Item UI  - Add restock button here -->
-                <button type="submit" class="btn btn-warning" id="perform-action-btn">Perform Action</button>
+                <button type="submit" class="btn btn-warning" id="perform-action-btn">Restock</button>
   
               </div>
             </div>
