@@ -108,7 +108,7 @@ class Inventory(db.Model):
             if self.restock_level < 0:
                 raise DataValidationError("Restock level cannot be negative")
             # Validate condition values
-            valid_conditions = ["New", "Open-Box", "Used"]
+            valid_conditions = ["New", "Opened", "Used", "Refurbished"]
             if self.condition not in valid_conditions:
                 raise DataValidationError(f"Invalid condition: {self.condition}")
         except (KeyError, AttributeError, TypeError) as error:
@@ -162,3 +162,16 @@ class Inventory(db.Model):
         """Returns all Inventory items that need restocking (quantity below restock_level)"""
         logger.info("Processing below restock level query ...")
         return cls.query.filter(cls.quantity < cls.restock_level)
+
+
+# @classmethod
+# def find_by_condition(cls, condition):
+#     """Find inventory items by their condition
+
+#     Args:
+#         condition (str): The condition to filter by (New, Used, Opened, Refurbished)
+
+#     Returns:
+#         list: A list of Inventory items matching the condition
+#     """
+#     return cls.query.filter(cls.condition == condition).all()

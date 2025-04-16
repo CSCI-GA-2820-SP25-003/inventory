@@ -203,8 +203,32 @@ $(function () {
         });
     
         ajax.done(function(res) {
-            displayInventoryItems(res);
-            flash_message("Success! Items retrieved");
+            $("#search_results_table").empty();
+    
+            let firstItem = "";
+            for(let i = 0; i < res.length; i++) {
+                let item = res[i];
+                let row = `<tr id="row_${i}">
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.product_id}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.condition}</td>
+                    <td>${item.restock_level}</td>
+                </tr>`;
+                $("#search_results_table").append(row);
+                
+                if (i == 0) {
+                    firstItem = item;
+                }
+            }
+        
+            // copy the first result to the form if any results found
+            if (firstItem != "") {
+                update_form_data(firstItem);
+            }
+            
+            flash_message(`Success! Found ${res.length} inventory items with condition "${condition}"`);
         });
     
         ajax.fail(function(res) {
@@ -212,6 +236,61 @@ $(function () {
             flash_message(res.responseJSON.message || "No items found for the selected condition");
         });
     });
+
+    // $("#search-btn").click(function () {
+    //     let condition = $("#inventory_condition").val();
+        
+    //     if (!condition) {
+    //         flash_message("Please select a condition to search");
+    //         return;
+    //     }
+    
+    //     $("#flash_message").empty();
+    
+    //     let ajax = $.ajax({
+    //         type: "GET",
+    //         url: `/api/inventory?condition=${condition}`,
+    //         contentType: "application/json",
+    //         data: ''
+    //     });
+    
+    //     ajax.done(function(res) {
+    //         // displayInventoryItems(res);
+    //         $("#search_results_table").empty();
+    
+    //         let firstItem = "";
+    //         for(let i = 0; i < res.length; i++) {
+    //             let item = res[i];
+    //             let row = `<tr id="row_${i}">
+    //                 <td>${item.id}</td>
+    //                 <td>${item.name}</td>
+    //                 <td>${item.product_id}</td>
+    //                 <td>${item.quantity}</td>
+    //                 <td>${item.condition}</td>
+    //                 <td>${item.restock_level}</td>
+    //             </tr>`;
+    //             $("#search_results_table").append(row);
+                
+    //             if (i == 0) {
+    //                 firstItem = item;
+    //             }
+    //         }
+        
+    //         // copy the first result to the form if any results found
+    //         if (firstItem != "") {
+    //             update_form_data(firstItem);
+    //         }
+            
+    //         flash_message(`Success! Found ${res.length} inventory items with condition "${condition}"`);
+    //     });
+    //         flash_message("Success! Items retrieved");
+    //     });
+    
+    //     ajax.fail(function(res) {
+    //         $("#search_results_table").empty(); // Clear previous results
+    //         flash_message(res.responseJSON.message || "No items found for the selected condition");
+    //     });
+    // });
 
 
     // ****************************************
@@ -335,8 +414,8 @@ $(function () {
         ajax.fail(function(res){
             flash_message(res.responseJSON.message || "Failed to list inventory items");
         });
+    
     }
-
     // Load inventory on page load
     list_inventory();
 });
