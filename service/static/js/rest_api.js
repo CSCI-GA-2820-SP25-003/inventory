@@ -229,7 +229,7 @@ $(function () {
         }
     
         $.ajax({
-            type: "POST",  // Match your backend method
+            type: "POST",  // Match the backend method in routes
             url: restock_url,
             contentType: "application/json",
             data: JSON.stringify(payload),
