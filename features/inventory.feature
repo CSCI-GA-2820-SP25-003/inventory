@@ -50,6 +50,18 @@ Feature: Inventory Admin UI
     And I press the "Perform Action" button
     Then I should see the message "Item marked as restocked successfully!"
 
+Scenario: Manually add quantity to an inventory item
+  Given I have an inventory item with quantity 2
+  When I enter 3 in the quantity field and click the "Restock" button
+  Then the item's quantity should be updated to 5
+  And the flash message should confirm the quantity was updated
+
+Scenario: Auto-restock item when quantity is below restock level
+  Given I have an inventory item with quantity 1 and restock level 5
+  When I leave the quantity field empty and click the "Restock" button
+  Then the item's quantity should be updated to match the restock level
+  And the flash message should confirm the restock was successful
+
 Scenario: Delete Inventory
     Given I open the Inventory Admin UI
     When I enter "Laptop" as the name

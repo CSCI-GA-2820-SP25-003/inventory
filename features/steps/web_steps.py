@@ -9,7 +9,6 @@ import os
 import time
 
 
-
 ID_PREFIX = "inventory_"
 
 
@@ -130,12 +129,14 @@ def step_copy_id_field(context):
     id_field = context.driver.find_element(By.ID, "inventory_id")
     context.inventory_id = id_field.get_attribute("value")
 
+
 @then('I should see "{value}" as the {field}')
 def step_verify_field_value(context, value, field):
     field_id = "inventory_" + field.lower()
     element = context.driver.find_element(By.ID, field_id)
     actual_value = element.get_attribute("value")
     assert str(actual_value) == value, f"Expected {value} but got {actual_value}"
+
 
 @then('I should see the message "{message}"')
 def step_verify_message(context, message):
@@ -144,6 +145,7 @@ def step_verify_message(context, message):
         expected_conditions.presence_of_element_located((By.ID, "flash_message"))
     )
     assert message in flash_message.text
+
 
 @then('I should not see "{value}" in the results')
 def step_not_see_in_results(context, value):
@@ -154,10 +156,12 @@ def step_not_see_in_results(context, value):
         # If the table is not found, that's also acceptable as the item was deleted
         pass
 
+
 @when('I select "{value}" as the condition')
 def step_select_condition(context, value):
     select = Select(context.driver.find_element(By.ID, "inventory_condition"))
     select.select_by_visible_text(value)
+
 
 @when('I press the "Search" button')
 def step_press_search_button(context):
@@ -165,17 +169,57 @@ def step_press_search_button(context):
     btn.click()
     time.sleep(1)  # Wait for the results to load
 
+
 @then('I should see a list of items that are "{condition}" condition')
 def step_see_items_by_condition(context, condition):
     table = context.driver.find_element(By.ID, "search_results_table")
     rows = table.find_elements(By.TAG_NAME, "tr")
-    
+
     # Check if any row contains the specified condition
     found = False
     for row in rows:
         cells = row.find_elements(By.TAG_NAME, "td")
-        if len(cells) > 0 and cells[3].text == condition:  # Assuming condition is in the 4th column
+        if (
+            len(cells) > 0 and cells[3].text == condition
+        ):  # Assuming condition is in the 4th column
             found = True
             break
-    
+
     assert found, f"No items found with condition '{condition}'"
+
+
+@given("I have an inventory item with quantity 2")
+def step_impl(context):
+    context.execute_steps(
+        f"""
+        Given I open the Inventory Admin UI
+        When I enter "Notebook" as the name
+        And I enter "1001" as the product ID
+        And I enter "2" as the quantity
+        And I select "New" as the condition
+        And I enter "10" as the restock level
+        And I press the "Create" button
+    """
+    )
+
+
+@given("I have an inventory item with quantity 1 and restock level 5")
+def step_impl(context):
+    context.execute_steps(
+        f"""
+        Given I open the Inventory Admin UI
+        When I enter "Headphones" as the name
+        And I enter "1002" as the product ID
+        And I enter "1" as the quantity
+        And I select "Used" as the condition
+        And I enter "5" as the restock level
+        And I press the "Create" button
+    """
+    )
+
+
+@when('I leave the quantity field empty and click the "Restock" button')
+def step_impl(context):
+    field = context.driver.find_element(By.ID, "inventory_quantity")
+    field.clear()
+    context.driver.find_element(By.ID, "perform-action-btn").click()

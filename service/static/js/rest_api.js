@@ -154,7 +154,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "DELETE",
-            url: `api/inventory/${inventory_id}`,
+            url: `/api/inventory/${inventory_id}`,
             contentType: "application/json",
             data: '',
         })
@@ -218,39 +218,70 @@ $(function () {
     // TODO: Perform Restock Action on Inventory Item
     // ****************************************
 
-    // Perform Restock Action on Inventory Item
     $("#perform-action-btn").click(function () {
         let inventory_id = $("#inventory_id").val();
-        let selected_action = $("#inventory_action").val();
+        let quantity = $("#inventory_quantity").val();  // Optional input
+        let restock_url = `/api/inventory/${inventory_id}/restock_level`;
     
-        $("#flash_message").empty();
-    
-        if (!inventory_id) {
-        flash_message("Please enter an Inventory ID first.");
-        return;
+        let payload = {};
+        if (quantity) {
+            payload["quantity"] = parseInt(quantity);  // Optional: send only if user enters
         }
     
-        if (selected_action === "restock") {
-        let ajax = $.ajax({
-            type: "PUT",
-            url: `/api/inventory/${inventory_id}/restock`,
+        $.ajax({
+            type: "POST",  // Match the backend method in routes
+            url: restock_url,
             contentType: "application/json",
-            data: JSON.stringify({})  // no body content for restock
-        });
+            data: JSON.stringify(payload),
+            success: function (response) {
+                flash_message(response.message || "Restock action completed");
     
-        ajax.done(function (res) {
-            update_form_data(res);
-            flash_message("Item marked as restocked successfully!");
-            list_inventory();
+                // Update form if new stock returned
+                if (response.new_stock !== undefined) {
+                    $("#inventory_quantity").val(response.new_stock);
+                }
+            },
+            error: function (xhr) {
+                flash_message("Error: " + xhr.responseText);
+            }
         });
-    
-        ajax.fail(function (res) {
-            flash_message(res.responseJSON.message || "Failed to perform restock action");
-        });
-        } else {
-        flash_message("Invalid action selected.");
-        }
     });
+    
+
+    // Perform Restock Action on Inventory Item
+
+    // $("#perform-action-btn").click(function () {
+    //     let inventory_id = $("#inventory_id").val();
+    //     let selected_action = $("#inventory_action").val();
+    
+    //     $("#flash_message").empty();
+    
+    //     if (!inventory_id) {
+    //     flash_message("Please enter an Inventory ID first.");
+    //     return;
+    //     }
+    
+    //     if (selected_action === "restock") {
+    //     let ajax = $.ajax({
+    //         type: "PUT",
+    //         url: `/api/inventory/${inventory_id}/restock`,
+    //         contentType: "application/json",
+    //         data: JSON.stringify({})  // no body content for restock
+    //     });
+    
+    //     ajax.done(function (res) {
+    //         update_form_data(res);
+    //         flash_message("Item marked as restocked successfully!");
+    //         list_inventory();
+    //     });
+    
+    //     ajax.fail(function (res) {
+    //         flash_message(res.responseJSON.message || "Failed to perform restock action");
+    //     });
+    //     } else {
+    //     flash_message("Invalid action selected.");
+    //     }
+    // });
     
     
 
