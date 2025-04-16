@@ -146,7 +146,28 @@ $(function () {
     // ****************************************
     // TODO: Delete an Inventory Item
     // ****************************************
+    $("#delete-btn").click(function () {
 
+        let inventory_id = $("#inventory_id").val();
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "DELETE",
+            url: `api/inventory/${inventory_id}`,
+            contentType: "application/json",
+            data: '',
+        })
+
+        ajax.done(function(res){
+            clear_form_data()
+            flash_message("Inventory has been Deleted!")
+        });
+
+        ajax.fail(function(res){
+            flash_message("Server error!")
+        });
+    });
  
 
 

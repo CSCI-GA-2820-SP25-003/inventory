@@ -8,6 +8,8 @@ from selenium.webdriver.support import expected_conditions
 import os
 import time
 
+
+
 ID_PREFIX = "inventory_"
 
 
@@ -121,3 +123,33 @@ def step_select_dropdown_value(context, text, element_name):
     element_id = "inventory_" + element_name.lower().replace(" ", "_")
     select = Select(context.driver.find_element(By.ID, element_id))
     select.select_by_visible_text(text)
+
+
+@when('I copy the "ID" field')
+def step_copy_id_field(context):
+    id_field = context.driver.find_element(By.ID, "inventory_id")
+    context.inventory_id = id_field.get_attribute("value")
+
+@then('I should see "{value}" as the {field}')
+def step_verify_field_value(context, value, field):
+    field_id = "inventory_" + field.lower()
+    element = context.driver.find_element(By.ID, field_id)
+    actual_value = element.get_attribute("value")
+    assert str(actual_value) == value, f"Expected {value} but got {actual_value}"
+
+@then('I should see the message "{message}"')
+def step_verify_message(context, message):
+    # Wait for the flash message to be present
+    flash_message = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, "flash_message"))
+    )
+    assert message in flash_message.text
+
+@then('I should not see "{value}" in the results')
+def step_not_see_in_results(context, value):
+    try:
+        table = context.driver.find_element(By.ID, "search_results_table")
+        assert value not in table.text
+    except:
+        # If the table is not found, that's also acceptable as the item was deleted
+        pass

@@ -50,3 +50,14 @@ Feature: Inventory Admin UI
     And I press the "Perform Action" button
     Then I should see the message "Item marked as restocked successfully!"
 
+Scenario: Delete Inventory
+    Given I open the Inventory Admin UI
+    When I enter "Laptop" as the name
+    Then I should see "0" as the quantity
+    And I should see "NEW" as the condition
+    And I should see "OUT_OF_STOCK" as the restock level
+    When I copy the "ID" field
+    And I press the "Delete" button
+    Then I should see the message "Inventory has been Deleted!"
+    When I press the "Search" button
+    Then I should not see "Laptop" in the results
