@@ -1,4 +1,13 @@
-Feature: Inventory Admin UI
+Feature: The Inventory Admin UI
+  As an inventory manager
+  I want to manage items from a browser-based UI
+  So that I can easily perform create, read, update, delete, and restock operations
+
+  Background:
+    Given the following inventory items
+      | name    | product_id | quantity | condition | restock_level |
+      | Laptop  | 123        | 10       | New       | 5             |
+      | Monitor | 456        | 3        | Used      | 2             |
 
   Scenario: Open the Inventory Admin UI and verify the page title
     Given I open the Inventory Admin UI
