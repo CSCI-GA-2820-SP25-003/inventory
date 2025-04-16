@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
 
@@ -223,3 +224,21 @@ def step_impl(context):
     field = context.driver.find_element(By.ID, "inventory_quantity")
     field.clear()
     context.driver.find_element(By.ID, "perform-action-btn").click()
+
+
+@given('the user is on the home page')
+def step_impl(context):
+    context.browser.get(context.base_url)
+
+@when('the user clicks the List All button')
+def step_impl(context):
+    list_button = context.browser.find_element(By.ID, 'list-btn')
+    list_button.click()
+
+@then('the inventory list should be displayed')
+def step_impl(context):
+    table = WebDriverWait(context.browser, 10).until(
+        EC.visibility_of_element_located((By.ID, 'search_results_table'))
+    )
+    rows = table.find_elements(By.TAG_NAME, 'tr')
+    assert len(rows) > 0, "Expected inventory items to be listed, but none were found."

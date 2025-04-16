@@ -79,3 +79,8 @@ Scenario: Query by Condition
     When I select "New" as the condition
     And I press the "Search" button
     Then the I should see a list of items that are "New" condition
+
+Scenario: Displaying all inventory items
+    Given the user is on the home page
+    When the user clicks the List All button
+    Then the inventory list should be displayed
