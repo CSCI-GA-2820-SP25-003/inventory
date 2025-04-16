@@ -185,7 +185,33 @@ $(function () {
     // TODO: Query/Search for Inventory Items by Condition
     // ****************************************
 
-
+    $("#search-btn").click(function () {
+        let condition = $("#inventory_condition").val();
+        
+        if (!condition) {
+            flash_message("Please select a condition to search");
+            return;
+        }
+    
+        $("#flash_message").empty();
+    
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/api/inventory?condition=${condition}`,
+            contentType: "application/json",
+            data: ''
+        });
+    
+        ajax.done(function(res) {
+            displayInventoryItems(res);
+            flash_message("Success! Items retrieved");
+        });
+    
+        ajax.fail(function(res) {
+            $("#search_results_table").empty(); // Clear previous results
+            flash_message(res.responseJSON.message || "No items found for the selected condition");
+        });
+    });
 
 
     // ****************************************
