@@ -61,3 +61,9 @@ Scenario: Delete Inventory
     Then I should see the message "Inventory has been Deleted!"
     When I press the "Search" button
     Then I should not see "Laptop" in the results
+
+Scenario: Query by Condition
+    Given I open the Inventory Admin UI
+    When I select "New" as the condition
+    And I press the "Search" button
+    Then the I should see a list of items that are "New" condition

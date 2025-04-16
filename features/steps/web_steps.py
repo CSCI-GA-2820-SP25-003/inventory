@@ -153,3 +153,29 @@ def step_not_see_in_results(context, value):
     except:
         # If the table is not found, that's also acceptable as the item was deleted
         pass
+
+@when('I select "{value}" as the condition')
+def step_select_condition(context, value):
+    select = Select(context.driver.find_element(By.ID, "inventory_condition"))
+    select.select_by_visible_text(value)
+
+@when('I press the "Search" button')
+def step_press_search_button(context):
+    btn = context.driver.find_element(By.ID, "search-btn")
+    btn.click()
+    time.sleep(1)  # Wait for the results to load
+
+@then('I should see a list of items that are "{condition}" condition')
+def step_see_items_by_condition(context, condition):
+    table = context.driver.find_element(By.ID, "search_results_table")
+    rows = table.find_elements(By.TAG_NAME, "tr")
+    
+    # Check if any row contains the specified condition
+    found = False
+    for row in rows:
+        cells = row.find_elements(By.TAG_NAME, "td")
+        if len(cells) > 0 and cells[3].text == condition:  # Assuming condition is in the 4th column
+            found = True
+            break
+    
+    assert found, f"No items found with condition '{condition}'"
