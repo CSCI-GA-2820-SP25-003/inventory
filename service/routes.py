@@ -74,8 +74,13 @@ inventory_model = api.model(
         ),
         "condition": fields.String(
             required=True,
-            description="The condition of the product (New, Used, Refurbished)",
-            enum=["New", "Used", "Refurbished"],
+            description="The condition of the product (New, Used, Opened, Refurbished)",
+            enum=[
+                "New",
+                "Used",
+                "Opened",
+                "Refurbished",
+            ],
             example="New",
         ),
         "restock_level": fields.Integer(
@@ -131,8 +136,13 @@ inventory_parser.add_argument(
 inventory_parser.add_argument(
     "condition",
     type=str,
-    help="Filter inventory items by condition (New, Used, Refurbished)",
-    choices=["New", "Used", "Refurbished"],
+    help="Filter inventory items by condition (New, Used, Opened, Refurbished)",
+    choices=[
+        "New",
+        "Used",
+        "Opened",
+        "Refurbished",
+    ],
     location="args",
     required=False,
 )
@@ -370,6 +380,7 @@ class InventoryCollection(Resource):
             items = Inventory.find_by_product_id(product_id)
         elif condition:
             app.logger.info("Find by condition: %s", condition)
+            # condition = condition.upper()
             items = Inventory.find_by_condition(condition)
         elif below_restock_level:
             app.logger.info("Find items below restock level")
