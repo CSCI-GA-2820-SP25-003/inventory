@@ -1,25 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  creationTimestamp: '2025-04-22T23:29:43Z'
-  generation: 3
-  managedFields:
-    - apiVersion: tekton.dev/v1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:spec':
-          .: {}
-          'f:finally': {}
-          'f:params': {}
-          'f:tasks': {}
-          'f:workspaces': {}
-      manager: Mozilla
-      operation: Update
-      time: '2025-04-23T04:10:14Z'
   name: inventory-pipeline
-  namespace: teresamuhiu-dev
-  resourceVersion: '1149748708'
-  uid: 5c65a3c8-d900-4d5a-9fca-96e6a257c1fe
 spec:
   params:
     - description: The URL to the git repo
