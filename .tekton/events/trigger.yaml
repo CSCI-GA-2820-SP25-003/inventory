@@ -1,0 +1,9 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: cd-trigger
+spec:
+  bindings:
+    - ref: cd-push-binding
+  template:
+    ref: cd-push-template
