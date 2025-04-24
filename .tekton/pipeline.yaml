@@ -1,38 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"tekton.dev/v1","kind":"Pipeline","metadata":{"annotations":{},"creationTimestamp":"2025-04-24T14:05:06Z","generation":2,"managedFields":[{"apiVersion":"tekton.dev/v1","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{".":{},"f:params":{}}},"manager":"kubectl-client-side-apply","operation":"Update","time":"2025-04-24T14:05:06Z"},{"apiVersion":"tekton.dev/v1","fieldsType":"FieldsV1","fieldsV1":{"f:spec":{"f:finally":{},"f:tasks":{},"f:workspaces":{}}},"manager":"Mozilla","operation":"Update","time":"2025-04-24T14:59:18Z"}],"name":"inventory-pipeline","namespace":"ky2591-dev","resourceVersion":"1272430192","uid":"fec62ac1-239e-49ac-af0f-3ccb84810b9b"},"spec":{"finally":[],"params":[{"description":"The URL to the git repo","name":"GIT_REPO","type":"string"},{"default":"master","description":"The reference to the branch","name":"GIT_REF","type":"string"},{"default":"inventory shop","description":"Name of the application","name":"APP_NAME","type":"string"},{"default":"image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest","description":"The name of the image to build","name":"IMAGE_NAME","type":"string"}],"tasks":[{"name":"git-clone","params":[{"name":"url","value":"$(params.GIT_REPO)"},{"name":"revision","value":"$(params.GIT_REF)"},{"name":"refspec","value":""},{"name":"submodules","value":"true"},{"name":"depth","value":"1"},{"name":"sslVerify","value":"true"},{"name":"crtFileName","value":"ca-bundle.crt"},{"name":"subdirectory","value":""},{"name":"sparseCheckoutDirectories","value":""},{"name":"deleteExisting","value":"true"},{"name":"httpProxy","value":""},{"name":"httpsProxy","value":""},{"name":"noProxy","value":""},{"name":"verbose","value":"true"},{"name":"gitInitImage","value":"gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2"},{"name":"userHome","value":"/home/git"}],"taskRef":{"kind":"Task","name":"git-clone"},"workspaces":[{"name":"output","workspace":"pipeline-workspace"}]},{"name":"pylint","params":[{"name":"image","value":"docker.io/python:3.11-slim"},{"name":"path","value":"service"},{"name":"args","value":[]},{"name":"requirements-file","value":"requirements.txt"}],"runAfter":["git-clone"],"taskRef":{"kind":"Task","name":"pylint"},"workspaces":[{"name":"source","workspace":"pipeline-workspace"}]},{"name":"testing","params":[{"name":"pytest-args","value":[]},{"name":"secret-name","value":"postgres-creds"},{"name":"secret-key","value":"database_uri"}],"runAfter":["git-clone"],"taskRef":{"kind":"Task","name":"pytest-env"},"workspaces":[{"name":"source","workspace":"pipeline-workspace"}]},{"name":"buildah","params":[{"name":"IMAGE","value":"$(params.IMAGE_NAME)"},{"name":"DOCKERFILE","value":"./Dockerfile"},{"name":"BUILD_ARGS","value":[""]},{"name":"CONTEXT","value":"."},{"name":"STORAGE_DRIVER","value":"vfs"},{"name":"FORMAT","value":"oci"},{"name":"BUILD_EXTRA_ARGS","value":""},{"name":"PUSH_EXTRA_ARGS","value":""},{"name":"SKIP_PUSH","value":"false"},{"name":"TLS_VERIFY","value":"true"},{"name":"VERBOSE","value":"false"}],"runAfter":["pylint","testing"],"taskRef":{"kind":"Task","name":"buildah"},"workspaces":[{"name":"source","workspace":"pipeline-workspace"}]},{"name":"deploy-image","params":[{"name":"image-name","value":" $(params.IMAGE_NAME)"},{"name":"manifest-dir","value":"k8s"}],"runAfter":["buildah"],"taskRef":{"kind":"Task","name":"deploy-image"},"workspaces":[{"name":"source","workspace":"pipeline-workspace"}]}],"workspaces":[{"name":"pipeline-workspace"}]}}
-  creationTimestamp: '2025-04-24T14:05:06Z'
-  generation: 2
-  managedFields:
-    - apiVersion: tekton.dev/v1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:spec':
-          'f:tasks': {}
-          'f:workspaces': {}
-      manager: Mozilla
-      operation: Update
-      time: '2025-04-24T14:59:18Z'
-    - apiVersion: tekton.dev/v1
-      fieldsType: FieldsV1
-      fieldsV1:
-        'f:metadata':
-          'f:annotations':
-            .: {}
-            'f:kubectl.kubernetes.io/last-applied-configuration': {}
-        'f:spec':
-          .: {}
-          'f:finally': {}
-          'f:params': {}
-      manager: kubectl-client-side-apply
-      operation: Update
-      time: '2025-04-24T15:37:55Z'
   name: inventory-pipeline
-  resourceVersion: '1273086913'
-  uid: fec62ac1-239e-49ac-af0f-3ccb84810b9b
 spec:
   params:
     - description: The URL to the git repo

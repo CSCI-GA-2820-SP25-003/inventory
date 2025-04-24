@@ -3,7 +3,8 @@ kind: Trigger
 metadata:
   name: cd-trigger
 spec:
+  serviceAccountName: pipeline
   bindings:
-    - ref: cd-push-binding
+    - ref: cd-binding
   template:
-    ref: cd-push-template
+    ref: cd-template
