@@ -51,6 +51,13 @@ def create_app():
         from service import routes, models  # noqa: F401 E402
         from service.common import error_handlers, cli_commands  # noqa: F401, E402
 
+        try:
+            db.create_all()
+        except Exception as error:  # pylint: disable=broad-except
+            app.logger.critical("%s: Cannot continue", error)
+            # gunicorn requires exit code 4 to stop spawning workers when they die
+            sys.exit(4)
+
         # Set up logging for production
         log_handlers.init_logging(app, "gunicorn.error")
 
