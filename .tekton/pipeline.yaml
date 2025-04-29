@@ -1,146 +1,644 @@
 apiVersion: tekton.dev/v1
-kind: Pipeline
+kind: PipelineRun
 metadata:
-  name: inventory-pipeline
+  name: inventory-pipeline-kddrpo
 spec:
   params:
-    - description: The URL to the git repo
-      name: GIT_REPO
-      type: string
-    - default: master
-      description: The reference to the branch
-      name: GIT_REF
-      type: string
-    - default: inventory shop
-      description: Name of the application
-      name: APP_NAME
-      type: string
-    - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
-      description: The name of the image to build
-      name: IMAGE_NAME
-      type: string
-  tasks:
-    - name: git-clone
-      params:
-        - name: url
-          value: $(params.GIT_REPO)
-        - name: revision
-          value: $(params.GIT_REF)
-        - name: refspec
-          value: ''
-        - name: submodules
-          value: 'true'
-        - name: depth
-          value: '1'
-        - name: sslVerify
-          value: 'true'
-        - name: crtFileName
-          value: ca-bundle.crt
-        - name: subdirectory
-          value: ''
-        - name: sparseCheckoutDirectories
-          value: ''
-        - name: deleteExisting
-          value: 'true'
-        - name: httpProxy
-          value: ''
-        - name: httpsProxy
-          value: ''
-        - name: noProxy
-          value: ''
-        - name: verbose
-          value: 'true'
-        - name: gitInitImage
-          value: 'gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2'
-        - name: userHome
-          value: /home/git
-      taskRef:
-        kind: Task
-        name: git-clone
-      workspaces:
-        - name: output
-          workspace: pipeline-workspace
-    - name: pylint
-      params:
-        - name: image
-          value: 'docker.io/python:3.11-slim'
-        - name: path
-          value: service
-        - name: args
-          value: []
-        - name: requirements-file
-          value: requirements.txt
-      runAfter:
-        - git-clone
-      taskRef:
-        kind: Task
-        name: pylint
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: pytest-env
-      params:
-        - name: pytest-args
-          value: []
-        - name: secret-name
-          value: postgres-creds
-        - name: secret-key
-          value: database_uri
-      runAfter:
-        - git-clone
-      taskRef:
-        kind: Task
-        name: pytest-env
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: buildah
-      params:
-        - name: IMAGE
-          value: $(params.IMAGE_NAME)
-        - name: DOCKERFILE
-          value: ./Dockerfile
-        - name: BUILD_ARGS
-          value:
-            - ''
-        - name: CONTEXT
-          value: .
-        - name: STORAGE_DRIVER
-          value: vfs
-        - name: FORMAT
-          value: oci
-        - name: BUILD_EXTRA_ARGS
-          value: ''
-        - name: PUSH_EXTRA_ARGS
-          value: ''
-        - name: SKIP_PUSH
-          value: 'false'
-        - name: TLS_VERIFY
-          value: 'true'
-        - name: VERBOSE
-          value: 'false'
-      runAfter:
-        - pylint
-        - pytest-env
-      taskRef:
-        kind: Task
-        name: buildah
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: deploy-image
-      params:
-        - name: image-name
-          value: '$(params.IMAGE_NAME)'
-        - name: manifest-dir
-          value: k8s
-      runAfter:
-        - buildah
-      taskRef:
-        kind: Task
-        name: deploy-image
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
+    - name: GIT_REPO
+      value: 'https://github.com/CSCI-GA-2820-SP25-003/inventory.git'
+    - name: GIT_REF
+      value: master
+    - name: APP_NAME
+      value: inventory shop
+    - name: IMAGE_NAME
+      value: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+  pipelineRef:
+    name: inventory-pipeline
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  timeouts:
+    pipeline: 1h0m0s
   workspaces:
     - name: pipeline-workspace
+      persistentVolumeClaim:
+        claimName: pipeline.pvc
+status:
+  childReferences:
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: inventory-pipeline-kddrpo-git-clone
+      pipelineTaskName: git-clone
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: inventory-pipeline-kddrpo-pylint
+      pipelineTaskName: pylint
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      name: inventory-pipeline-kddrpo-pytest-env
+      pipelineTaskName: pytest-env
+  completionTime: '2025-04-29T03:01:27Z'
+  conditions:
+    - lastTransitionTime: '2025-04-29T03:01:27Z'
+      message: 'Tasks Completed: 3 (Failed: 0, Cancelled 0), Skipped: 0'
+      reason: Succeeded
+      status: 'True'
+      type: Succeeded
+  pipelineSpec:
+    params:
+      - description: The URL to the git repo
+        name: GIT_REPO
+        type: string
+      - default: master
+        description: The reference to the branch
+        name: GIT_REF
+        type: string
+      - default: inventory shop
+        description: Name of the application
+        name: APP_NAME
+        type: string
+      - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+        description: The name of the image to build
+        name: IMAGE_NAME
+        type: string
+    tasks:
+      - name: git-clone
+        params:
+          - name: url
+            value: 'https://github.com/CSCI-GA-2820-SP25-003/inventory.git'
+          - name: revision
+            value: master
+          - name: refspec
+            value: ''
+          - name: submodules
+            value: 'true'
+          - name: depth
+            value: '1'
+          - name: sslVerify
+            value: 'true'
+          - name: crtFileName
+            value: ca-bundle.crt
+          - name: subdirectory
+            value: ''
+          - name: sparseCheckoutDirectories
+            value: ''
+          - name: deleteExisting
+            value: 'true'
+          - name: httpProxy
+            value: ''
+          - name: httpsProxy
+            value: ''
+          - name: noProxy
+            value: ''
+          - name: verbose
+            value: 'true'
+          - name: gitInitImage
+            value: 'gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2'
+          - name: userHome
+            value: /home/git
+        taskRef:
+          kind: Task
+          name: git-clone
+        workspaces:
+          - name: output
+            workspace: pipeline-workspace
+        status:
+          taskSpec:
+            description: |-
+              These Tasks are Git tasks to work with repositories used by other tasks in your Pipeline.
+              The git-clone Task will clone a repo from the provided url into the output Workspace. By default the repo will be cloned into the root of your Workspace. You can clone into a subdirectory by setting this Task's subdirectory param. This Task also supports sparse checkouts. To perform a sparse checkout, pass a list of comma separated directory patterns to this Task's sparseCheckoutDirectories param.
+            params:
+              - description: Repository URL to clone from.
+                name: url
+                type: string
+              - default: ''
+                description: 'Revision to checkout. (branch, tag, sha, ref, etc...)'
+                name: revision
+                type: string
+              - default: ''
+                description: Refspec to fetch before checking out revision.
+                name: refspec
+                type: string
+              - default: 'true'
+                description: Initialize and fetch git submodules.
+                name: submodules
+                type: string
+              - default: '1'
+                description: 'Perform a shallow clone, fetching only the most recent N commits.'
+                name: depth
+                type: string
+              - default: 'true'
+                description: Set the `http.sslVerify` global git config. Setting this to `false` is not advised unless you are sure that you trust your git remote.
+                name: sslVerify
+                type: string
+              - default: ca-bundle.crt
+                description: file name of mounted crt using ssl-ca-directory workspace. default value is ca-bundle.crt.
+                name: crtFileName
+                type: string
+              - default: ''
+                description: Subdirectory inside the `output` Workspace to clone the repo into.
+                name: subdirectory
+                type: string
+              - default: ''
+                description: Define the directory patterns to match or exclude when performing a sparse checkout.
+                name: sparseCheckoutDirectories
+                type: string
+              - default: 'true'
+                description: Clean out the contents of the destination directory if it already exists before cloning.
+                name: deleteExisting
+                type: string
+              - default: ''
+                description: HTTP proxy server for non-SSL requests.
+                name: httpProxy
+                type: string
+              - default: ''
+                description: HTTPS proxy server for SSL requests.
+                name: httpsProxy
+                type: string
+              - default: ''
+                description: Opt out of proxying HTTP/HTTPS requests.
+                name: noProxy
+                type: string
+              - default: 'true'
+                description: Log the commands that are executed during `git-clone`'s operation.
+                name: verbose
+                type: string
+              - default: 'gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2'
+                description: The image providing the git-init binary that this Task runs.
+                name: gitInitImage
+                type: string
+              - default: /home/git
+                description: |
+                  Absolute path to the user's home directory.
+                name: userHome
+                type: string
+            results:
+              - description: The precise commit SHA that was fetched by this Task.
+                name: commit
+                type: string
+              - description: The precise URL that was fetched by this Task.
+                name: url
+                type: string
+              - description: The epoch timestamp of the commit that was fetched by this Task.
+                name: committer-date
+                type: string
+            steps:
+              - computeResources: {}
+                env:
+                  - name: HOME
+                    value: /home/git
+                  - name: PARAM_URL
+                    value: 'https://github.com/CSCI-GA-2820-SP25-003/inventory.git'
+                  - name: PARAM_REVISION
+                    value: master
+                  - name: PARAM_REFSPEC
+                  - name: PARAM_SUBMODULES
+                    value: 'true'
+                  - name: PARAM_DEPTH
+                    value: '1'
+                  - name: PARAM_SSL_VERIFY
+                    value: 'true'
+                  - name: PARAM_CRT_FILENAME
+                    value: ca-bundle.crt
+                  - name: PARAM_SUBDIRECTORY
+                  - name: PARAM_DELETE_EXISTING
+                    value: 'true'
+                  - name: PARAM_HTTP_PROXY
+                  - name: PARAM_HTTPS_PROXY
+                  - name: PARAM_NO_PROXY
+                  - name: PARAM_VERBOSE
+                    value: 'true'
+                  - name: PARAM_SPARSE_CHECKOUT_DIRECTORIES
+                  - name: PARAM_USER_HOME
+                    value: /home/git
+                  - name: WORKSPACE_OUTPUT_PATH
+                    value: /workspace/output
+                  - name: WORKSPACE_SSH_DIRECTORY_BOUND
+                    value: 'false'
+                  - name: WORKSPACE_SSH_DIRECTORY_PATH
+                  - name: WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND
+                    value: 'false'
+                  - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
+                  - name: WORKSPACE_SSL_CA_DIRECTORY_BOUND
+                    value: 'false'
+                  - name: WORKSPACE_SSL_CA_DIRECTORY_PATH
+                image: 'gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.40.2'
+                name: clone
+                script: |
+                  #!/usr/bin/env sh
+                  set -eu
+
+                  if [ "${PARAM_VERBOSE}" = "true" ] ; then
+                    set -x
+                  fi
+
+                  if [ "${WORKSPACE_BASIC_AUTH_DIRECTORY_BOUND}" = "true" ] ; then
+                    cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.git-credentials" "${PARAM_USER_HOME}/.git-credentials"
+                    cp "${WORKSPACE_BASIC_AUTH_DIRECTORY_PATH}/.gitconfig" "${PARAM_USER_HOME}/.gitconfig"
+                    chmod 400 "${PARAM_USER_HOME}/.git-credentials"
+                    chmod 400 "${PARAM_USER_HOME}/.gitconfig"
+                  fi
+
+                  if [ "${WORKSPACE_SSH_DIRECTORY_BOUND}" = "true" ] ; then
+                    cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${PARAM_USER_HOME}"/.ssh
+                    chmod 700 "${PARAM_USER_HOME}"/.ssh
+                    chmod -R 400 "${PARAM_USER_HOME}"/.ssh/*
+                  fi
+
+                  if [ "${WORKSPACE_SSL_CA_DIRECTORY_BOUND}" = "true" ] ; then
+                     export GIT_SSL_CAPATH="${WORKSPACE_SSL_CA_DIRECTORY_PATH}"
+                     if [ "${PARAM_CRT_FILENAME}" != "" ] ; then
+                        export GIT_SSL_CAINFO="${WORKSPACE_SSL_CA_DIRECTORY_PATH}/${PARAM_CRT_FILENAME}"
+                     fi
+                  fi
+                  CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}"
+
+                  cleandir() {
+                    # Delete any existing contents of the repo directory if it exists.
+                    #
+                    # We don't just "rm -rf ${CHECKOUT_DIR}" because ${CHECKOUT_DIR} might be "/"
+                    # or the root of a mounted volume.
+                    if [ -d "${CHECKOUT_DIR}" ] ; then
+                      # Delete non-hidden files and directories
+                      rm -rf "${CHECKOUT_DIR:?}"/*
+                      # Delete files and directories starting with . but excluding ..
+                      rm -rf "${CHECKOUT_DIR}"/.[!.]*
+                      # Delete files and directories starting with .. plus any other character
+                      rm -rf "${CHECKOUT_DIR}"/..?*
+                    fi
+                  }
+
+                  if [ "${PARAM_DELETE_EXISTING}" = "true" ] ; then
+                    cleandir || true
+                  fi
+
+                  test -z "${PARAM_HTTP_PROXY}" || export HTTP_PROXY="${PARAM_HTTP_PROXY}"
+                  test -z "${PARAM_HTTPS_PROXY}" || export HTTPS_PROXY="${PARAM_HTTPS_PROXY}"
+                  test -z "${PARAM_NO_PROXY}" || export NO_PROXY="${PARAM_NO_PROXY}"
+
+                  git config --global --add safe.directory "${WORKSPACE_OUTPUT_PATH}"
+                  /ko-app/git-init \
+                    -url="${PARAM_URL}" \
+                    -revision="${PARAM_REVISION}" \
+                    -refspec="${PARAM_REFSPEC}" \
+                    -path="${CHECKOUT_DIR}" \
+                    -sslVerify="${PARAM_SSL_VERIFY}" \
+                    -submodules="${PARAM_SUBMODULES}" \
+                    -depth="${PARAM_DEPTH}" \
+                    -sparseCheckoutDirectories="${PARAM_SPARSE_CHECKOUT_DIRECTORIES}"
+                  cd "${CHECKOUT_DIR}"
+                  RESULT_SHA="$(git rev-parse HEAD)"
+                  EXIT_CODE="$?"
+                  if [ "${EXIT_CODE}" != 0 ] ; then
+                    exit "${EXIT_CODE}"
+                  fi
+                  RESULT_COMMITTER_DATE="$(git log -1 --pretty=%ct)"
+                  printf "%s" "${RESULT_COMMITTER_DATE}" > "/tekton/results/committer-date"
+                  printf "%s" "${RESULT_SHA}" > "/tekton/results/commit"
+                  printf "%s" "${PARAM_URL}" > "/tekton/results/url"
+                securityContext:
+                  runAsNonRoot: true
+                  runAsUser: 65532
+            workspaces:
+              - description: The git repo will be cloned onto the volume backing this Workspace.
+                name: output
+              - description: |
+                  A .ssh directory with private key, known_hosts, config, etc. Copied to
+                  the user's home before git commands are executed. Used to authenticate
+                  with the git remote when performing the clone. Binding a Secret to this
+                  Workspace is strongly recommended over other volume types.
+                name: ssh-directory
+                optional: true
+              - description: |
+                  A Workspace containing a .gitconfig and .git-credentials file. These
+                  will be copied to the user's home before any git commands are run. Any
+                  other files in this Workspace are ignored. It is strongly recommended
+                  to use ssh-directory over basic-auth whenever possible and to bind a
+                  Secret to this Workspace over other volume types.
+                name: basic-auth
+                optional: true
+              - description: |
+                  A workspace containing CA certificates, this will be used by Git to
+                  verify the peer with when fetching or pushing over HTTPS.
+                name: ssl-ca-directory
+                optional: true
+          artifacts: {}
+          provenance:
+            featureFlags:
+              EnableConciseResolverSyntax: false
+              MaxResultSize: 4096
+              AwaitSidecarReadiness: true
+              Coschedule: workspaces
+              ResultExtractionMethod: termination-message
+              EnableParamEnum: false
+              SendCloudEventsForRuns: false
+              EnforceNonfalsifiability: none
+              SetSecurityContext: false
+              DisableCredsInit: false
+              DisableAffinityAssistant: true
+              EnableStepActions: true
+              EnableAPIFields: beta
+              RequireGitSSHSecretKnownHosts: false
+              EnableKubernetesSidecar: false
+              RunningInEnvWithInjectedSidecars: true
+              EnableKeepPodOnCancel: false
+              VerificationNoMatchPolicy: ignore
+              EnableProvenanceInStatus: true
+              DisableInlineSpec: ''
+              EnableArtifacts: false
+              EnableCELInWhenExpression: false
+          steps:
+            - container: step-clone
+              imageID: 'gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:176c1d67371296b29447cef5478ad50cc6546ad858d34122e626b3a12d225436'
+              name: clone
+              terminated:
+                containerID: 'cri-o://2c25c3f299fac83ecce5ac2e89d9fc0d62c2ef909bd03c15bdf9858937980ac0'
+                exitCode: 0
+                finishedAt: '2025-04-29T03:00:47Z'
+                message: '[{"key":"commit","value":"33eb06e947bc8bfbda6dc3b3f699a865a13e4018","type":1},{"key":"committer-date","value":"1745895202","type":1},{"key":"url","value":"https://github.com/CSCI-GA-2820-SP25-003/inventory.git","type":1}]'
+                reason: Completed
+                startedAt: '2025-04-29T03:00:47Z'
+              terminationReason: Completed
+          completionTime: '2025-04-29T03:00:48Z'
+          startTime: '2025-04-29T03:00:34Z'
+          podName: inventory-pipeline-kddrpo-git-clone-pod
+          results:
+            - name: commit
+              type: string
+              value: 33eb06e947bc8bfbda6dc3b3f699a865a13e4018
+            - name: committer-date
+              type: string
+              value: '1745895202'
+            - name: url
+              type: string
+              value: 'https://github.com/CSCI-GA-2820-SP25-003/inventory.git'
+          conditions:
+            - lastTransitionTime: '2025-04-29T03:00:48Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          duration: 14s
+          reason: Succeeded
+      - name: pylint
+        params:
+          - name: image
+            value: 'docker.io/python:3.11-slim'
+          - name: path
+            value: service
+          - name: args
+            value: []
+          - name: requirements-file
+            value: requirements.txt
+        runAfter:
+          - git-clone
+        taskRef:
+          kind: Task
+          name: pylint
+        workspaces:
+          - name: source
+            workspace: pipeline-workspace
+        status:
+          artifacts: {}
+          completionTime: '2025-04-29T03:01:27Z'
+          conditions:
+            - lastTransitionTime: '2025-04-29T03:01:27Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: inventory-pipeline-kddrpo-pylint-pod
+          provenance:
+            featureFlags:
+              EnableConciseResolverSyntax: false
+              MaxResultSize: 4096
+              AwaitSidecarReadiness: true
+              Coschedule: workspaces
+              ResultExtractionMethod: termination-message
+              EnableParamEnum: false
+              SendCloudEventsForRuns: false
+              EnforceNonfalsifiability: none
+              SetSecurityContext: false
+              DisableCredsInit: false
+              DisableAffinityAssistant: true
+              EnableStepActions: true
+              EnableAPIFields: beta
+              RequireGitSSHSecretKnownHosts: false
+              EnableKubernetesSidecar: false
+              RunningInEnvWithInjectedSidecars: true
+              EnableKeepPodOnCancel: false
+              VerificationNoMatchPolicy: ignore
+              EnableProvenanceInStatus: true
+              DisableInlineSpec: ''
+              EnableArtifacts: false
+              EnableCELInWhenExpression: false
+          startTime: '2025-04-29T03:00:48Z'
+          steps:
+            - container: step-pylint
+              imageID: 'docker.io/library/python@sha256:82c07f2f6e35255b92eb16f38dbd22679d5e8fb523064138d7c6468e7bf0c15b'
+              name: pylint
+              terminated:
+                containerID: 'cri-o://3e1b4602ab20a1418462d2b8b8800c8c6bb73565b994144f0664a1fca05cba86'
+                exitCode: 0
+                finishedAt: '2025-04-29T03:01:26Z'
+                reason: Completed
+                startedAt: '2025-04-29T03:00:53Z'
+              terminationReason: Completed
+          taskSpec:
+            description: Use to run pylint on the provided input source.  If Poetry or Pipenv is being used it will detect  the poetry.lock and Pipfile file and install using them.
+            params:
+              - default: 'docker.io/python:3.11-slim'
+                description: The container image with pylint
+                name: image
+                type: string
+              - default: .
+                description: The path to the module which should be analyzed by pylint
+                name: path
+                type: string
+              - default: []
+                description: The arguments to pass to the pylint CLI.
+                name: args
+                type: array
+              - default: requirements.txt
+                description: The name of the requirements file inside the source location
+                name: requirements-file
+                type: string
+            steps:
+              - computeResources: {}
+                image: 'docker.io/python:3.11-slim'
+                name: pylint
+                script: |
+                  #!/bin/bash
+                  set -e
+                  export PATH=$PATH:$HOME/.local/bin:
+
+                  echo "***** Installing dependencies *****"
+                  if [ -e "poetry.lock" ]; then
+                    echo "Found poetry.lock file: using poetry ..."
+                    python -m pip install --upgrade pip poetry
+                    poetry config virtualenvs.create false
+                    poetry install
+                  elif [ -e "Pipfile" ]; then
+                    echo "Found Pipfile file: using pipenv ..."
+                    python -m pip install --upgrade pip pipenv
+                    pipenv install --system --dev
+                  elif [ -n "requirements.txt" ] && [ -e "requirements.txt" ]; then
+                    python -m pip install --user -r "requirements.txt"
+                  fi
+
+                  # Make sure pylint is installed
+                  python -m pip install pylint
+
+                  echo "***** Running Linting *****"
+                  pylint $@ "service"
+                workingDir: /workspace/source
+            workspaces:
+              - description: The workspace with the source code.
+                name: source
+          duration: 39s
+          reason: Succeeded
+      - name: pytest-env
+        params:
+          - name: pytest-args
+            value: []
+          - name: secret-name
+            value: postgres-creds
+          - name: secret-key
+            value: database_uri
+        runAfter:
+          - git-clone
+        taskRef:
+          kind: Task
+          name: pytest-env
+        workspaces:
+          - name: source
+            workspace: pipeline-workspace
+        status:
+          artifacts: {}
+          completionTime: '2025-04-29T03:01:19Z'
+          conditions:
+            - lastTransitionTime: '2025-04-29T03:01:19Z'
+              message: All Steps have completed executing
+              reason: Succeeded
+              status: 'True'
+              type: Succeeded
+          podName: inventory-pipeline-kddrpo-pytest-env-pod
+          provenance:
+            featureFlags:
+              EnableConciseResolverSyntax: false
+              MaxResultSize: 4096
+              AwaitSidecarReadiness: true
+              Coschedule: workspaces
+              ResultExtractionMethod: termination-message
+              EnableParamEnum: false
+              SendCloudEventsForRuns: false
+              EnforceNonfalsifiability: none
+              SetSecurityContext: false
+              DisableCredsInit: false
+              DisableAffinityAssistant: true
+              EnableStepActions: true
+              EnableAPIFields: beta
+              RequireGitSSHSecretKnownHosts: false
+              EnableKubernetesSidecar: false
+              RunningInEnvWithInjectedSidecars: true
+              EnableKeepPodOnCancel: false
+              VerificationNoMatchPolicy: ignore
+              EnableProvenanceInStatus: true
+              DisableInlineSpec: ''
+              EnableArtifacts: false
+              EnableCELInWhenExpression: false
+          startTime: '2025-04-29T03:00:48Z'
+          steps:
+            - container: step-pytest
+              imageID: 'docker.io/library/python@sha256:82c07f2f6e35255b92eb16f38dbd22679d5e8fb523064138d7c6468e7bf0c15b'
+              name: pytest
+              terminated:
+                containerID: 'cri-o://c77d934ef06c9b40c7bc458f51afa9602132f2adaf2b6df7b743739beba4b063'
+                exitCode: 0
+                finishedAt: '2025-04-29T03:01:18Z'
+                reason: Completed
+                startedAt: '2025-04-29T03:00:53Z'
+              terminationReason: Completed
+          taskSpec:
+            description: |-
+              This task can be used to perform unit tests with pytest. It supports both requirements.txt, Pipfile, & poetry.lock files.
+              It also has the ability to create an environment variable that is sourced from a Secret. This allows you to define credentials that can be used to connect to a test database.
+            params:
+              - default: []
+                description: The arguments to pass to the pytest CLI.
+                name: pytest-args
+                type: array
+              - default: postgres-creds
+                description: The name of the secret containing a database_uri key
+                name: secret-name
+                type: string
+              - default: database_uri
+                description: The name of the key that contains the database uri
+                name: secret-key
+                type: string
+            steps:
+              - computeResources: {}
+                env:
+                  - name: DATABASE_URI
+                    valueFrom:
+                      secretKeyRef:
+                        key: database_uri
+                        name: postgres-creds
+                image: 'docker.io/python:3.11-slim'
+                name: pytest
+                script: |
+                  #!/bin/bash
+                  set -e
+                  export PATH=$PATH:$HOME/.local/bin:
+
+                  echo "***** Installing dependencies *****"
+                  if [ -e "poetry.lock" ]; then
+                    echo "Found poetry.lock file: using poetry ..."
+                    python -m pip install --upgrade pip poetry
+                    poetry config virtualenvs.create false
+                    poetry install
+                  elif [ -e "Pipfile" ]; then
+                    echo "Found Pipfile file: using pipenv ..."
+                    python -m pip install --upgrade pip pipenv
+                    pipenv install --system --dev
+                  elif -e "requirements.txt" ]; then
+                    python -m pip install --user -r requirements.txt
+                  fi
+
+                  # Make sure pylint is installed
+                  python -m pip install pytest
+
+                  echo "***** Running Tests *****"
+                  pytest --version
+                  pytest
+                workingDir: /workspace/source
+            workspaces:
+              - name: source
+          duration: 31s
+          reason: Succeeded
+    workspaces:
+      - name: pipeline-workspace
+  provenance:
+    featureFlags:
+      EnableConciseResolverSyntax: false
+      MaxResultSize: 4096
+      AwaitSidecarReadiness: true
+      Coschedule: workspaces
+      ResultExtractionMethod: termination-message
+      EnableParamEnum: false
+      SendCloudEventsForRuns: false
+      EnforceNonfalsifiability: none
+      SetSecurityContext: false
+      DisableCredsInit: false
+      DisableAffinityAssistant: true
+      EnableStepActions: true
+      EnableAPIFields: beta
+      RequireGitSSHSecretKnownHosts: false
+      EnableKubernetesSidecar: false
+      RunningInEnvWithInjectedSidecars: true
+      EnableKeepPodOnCancel: false
+      VerificationNoMatchPolicy: ignore
+      EnableProvenanceInStatus: true
+      DisableInlineSpec: ''
+      EnableArtifacts: false
+      EnableCELInWhenExpression: false
+  startTime: '2025-04-29T03:00:34Z'
