@@ -60,7 +60,8 @@ def step_press_button(context, button_text):
         "Clear": "clear-btn",
         "List All": "list-btn",
         "Search": "search-btn",
-        "Restock": "perform-action-btn"
+        "Restock": "perform-action-btn",
+        "Perform Action": "perform-action-btn"
     }
     button_id = button_id_map.get(button_text)
     if not button_id:
@@ -147,7 +148,7 @@ def step_see_items_by_condition(context, condition):
     table = context.driver.find_element(By.ID, "search_results_table")
     rows = table.find_elements(By.TAG_NAME, "tr")
     found = any(
-        len(cells := row.find_elements(By.TAG_NAME, "td")) > 0 and cells[4].text == condition
+        len(cells := row.find_elements(By.TAG_NAME, "td")) > 0 and cells[4].text.lower() == condition.lower()
         for row in rows
     )
     assert found, f"No items found with condition '{condition}'"
@@ -157,6 +158,40 @@ def step_empty_quantity_and_restock(context):
     field = context.driver.find_element(By.ID, "inventory_quantity")
     field.clear()
     context.driver.find_element(By.ID, "perform-action-btn").click()
+
+@when('I enter {value:d} in the quantity field and click the "Restock" button')
+def step_enter_quantity_and_restock(context, value):
+    field = context.driver.find_element(By.ID, "inventory_quantity")
+    field.clear()
+    field.send_keys(str(value))
+    context.driver.find_element(By.ID, "perform-action-btn").click()
+    time.sleep(1)
+
+@then("the item's quantity should be updated to {expected_quantity:d}")
+def step_verify_quantity_updated(context, expected_quantity):
+    field = context.driver.find_element(By.ID, "inventory_quantity")
+    actual = int(field.get_attribute("value"))
+    assert actual == expected_quantity, f"Expected quantity {expected_quantity}, but got {actual}"
+
+@then("the flash message should confirm the quantity was updated")
+def step_flash_confirm_quantity_updated(context):
+    flash = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.visibility_of_element_located((By.ID, "flash_message"))
+    )
+    assert "updated" in flash.text.lower()
+
+@then("the item's quantity should be updated to match the restock level")
+def step_verify_auto_restocked(context):
+    quantity = int(context.driver.find_element(By.ID, "inventory_quantity").get_attribute("value"))
+    restock = int(context.driver.find_element(By.ID, "inventory_restock_level").get_attribute("value"))
+    assert quantity == restock, f"Expected quantity to match restock level ({restock}), but got {quantity}"
+
+@then("the flash message should confirm the restock was successful")
+def step_flash_confirm_restock(context):
+    flash = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.visibility_of_element_located((By.ID, "flash_message"))
+    )
+    assert "restock" in flash.text.lower()
 
 @given("I have an inventory item with quantity 2")
 def step_seed_inventory_quantity_2(context):
