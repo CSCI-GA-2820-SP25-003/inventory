@@ -22,7 +22,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: inventory
-        image: cluster-registry:5000/nyu-devops/inventory:1.0.0
+        image: cluster-registry:5000/nyu-devops/inventory:latest
         # image: inventory
         imagePullPolicy: IfNotPresent
         ports:
