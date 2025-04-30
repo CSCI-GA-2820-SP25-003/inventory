@@ -51,7 +51,12 @@ def step_enter_restock_level(context, value):
 
 @when('I press the "{button_text}" button')
 def step_press_button(context, button_text):
-    btn = context.driver.find_element(By.XPATH, f'//button[text()="{button_text}"]')
+    try:
+        # Attempt to locate by visible text
+        btn = context.driver.find_element(By.XPATH, f'//button[text()="{button_text}"]')
+    except:
+        # Fallback to button ID
+        btn = context.driver.find_element(By.ID, f'{button_text.lower()}-btn')
     btn.click()
     time.sleep(1)
 
@@ -131,12 +136,6 @@ def step_not_see_in_results(context, value):
     except:
         pass
 
-@when('I press the "Search" button')
-def step_press_search_button(context):
-    btn = context.driver.find_element(By.ID, "search-btn")
-    btn.click()
-    time.sleep(1)
-
 @then('I should see a list of items that are "{condition}" condition')
 def step_see_items_by_condition(context, condition):
     table = context.driver.find_element(By.ID, "search_results_table")
@@ -145,7 +144,7 @@ def step_see_items_by_condition(context, condition):
     assert found, f"No items found with condition '{condition}'"
 
 @given("I have an inventory item with quantity 2")
-def step_impl(context):
+def step_impl_quantity_2(context):
     context.execute_steps(
         f"""
         Given I open the Inventory Admin UI
@@ -159,7 +158,7 @@ def step_impl(context):
     )
 
 @given("I have an inventory item with quantity 1 and restock level 5")
-def step_impl(context):
+def step_impl_quantity_1_restock_5(context):
     context.execute_steps(
         f"""
         Given I open the Inventory Admin UI
@@ -173,22 +172,22 @@ def step_impl(context):
     )
 
 @when('I leave the quantity field empty and click the "Restock" button')
-def step_impl(context):
+def step_impl_empty_quantity(context):
     field = context.driver.find_element(By.ID, "inventory_quantity")
     field.clear()
     context.driver.find_element(By.ID, "perform-action-btn").click()
 
 @given('the user is on the home page')
-def step_impl(context):
+def step_user_on_home(context):
     context.browser.get(context.base_url)
 
 @when('the user clicks the List All button')
-def step_impl(context):
+def step_user_click_list_all(context):
     list_button = context.browser.find_element(By.ID, 'list-btn')
     list_button.click()
 
 @then('the inventory list should be displayed')
-def step_impl(context):
+def step_inventory_list_displayed(context):
     table = WebDriverWait(context.browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'search_results_table'))
     )
