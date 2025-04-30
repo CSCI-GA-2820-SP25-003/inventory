@@ -129,7 +129,7 @@ class TestYourResourceService(TestCase):
 
     def test_index(self):
         """It should return API metadata from the root endpoint"""
-        resp = self.client.get("/")
+        resp = self.client.get("/metadata")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         metadata = resp.get_json()
