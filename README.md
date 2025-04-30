@@ -9,7 +9,7 @@
 
 There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
 
-These should be copied using a bash shell as follows
+These should be copied using a bash shell as follows:
 
 ```bash
     cp .gitignore  ../<your_repo_folder>/
