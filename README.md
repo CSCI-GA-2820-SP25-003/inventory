@@ -19,7 +19,7 @@ These should be copied using a bash shell as follows:
 
 ## Contents
 
-The project contains the following
+The project contains the following:
 
 ```text
 .gitignore          - this will ignore vagrant and other metadata files
