@@ -779,7 +779,7 @@ class TestYourResourceService(TestCase):
 
     def test_create_inventory_page(self):
         """It should render the create inventory form page"""
-        response = self.client.get("/inventory")
+        response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(
             b"Create, Retrieve, Update, and Delete Inventory Items:", response.data
