@@ -18,6 +18,7 @@ def step_open_ui(context):
     options.add_argument("--disable-dev-shm-usage")
     context.driver = webdriver.Chrome(options=options)
     context.driver.get(base_url)
+    context.wait_seconds = 10
     time.sleep(1)
 
 @when('I enter "{value}" as the name')
@@ -51,12 +52,20 @@ def step_enter_restock_level(context, value):
 
 @when('I press the "{button_text}" button')
 def step_press_button(context, button_text):
-    try:
-        # Attempt to locate by visible text
-        btn = context.driver.find_element(By.XPATH, f'//button[text()="{button_text}"]')
-    except:
-        # Fallback to button ID
-        btn = context.driver.find_element(By.ID, f'{button_text.lower()}-btn')
+    button_id_map = {
+        "Create": "create-btn",
+        "Retrieve": "retrieve-btn",
+        "Update": "update-btn",
+        "Delete": "delete-btn",
+        "Clear": "clear-btn",
+        "List All": "list-btn",
+        "Search": "search-btn",
+        "Restock": "perform-action-btn"
+    }
+    button_id = button_id_map.get(button_text)
+    if not button_id:
+        raise Exception(f"Unrecognized button: {button_text}")
+    btn = context.driver.find_element(By.ID, button_id)
     btn.click()
     time.sleep(1)
 
@@ -65,14 +74,20 @@ def step_see_in_table(context, value):
     table = context.driver.find_element(By.ID, "search_results_table")
     assert value in table.text
 
+@then('I should not see "{value}" in the results')
+def step_not_see_in_results(context, value):
+    try:
+        table = context.driver.find_element(By.ID, "search_results_table")
+        assert value not in table.text
+    except:
+        pass
+
 @when("I grab the first inventory ID from the results table")
 def step_grab_id(context):
     table = context.driver.find_element(By.ID, "search_results_table")
     first_row = table.find_element(By.TAG_NAME, "tr")
     first_cell = first_row.find_element(By.TAG_NAME, "td")
-    inventory_id = first_cell.text.strip()
-    context.inventory_id = inventory_id
-    print("DEBUG >>> Grabbed ID:", inventory_id)
+    context.inventory_id = first_cell.text.strip()
 
 @when("I enter the grabbed inventory ID")
 def step_enter_grabbed_id(context):
@@ -83,8 +98,15 @@ def step_enter_grabbed_id(context):
 @then('the name field should contain "{value}"')
 def step_verify_name(context, value):
     name = context.driver.find_element(By.ID, "inventory_name").get_attribute("value")
-    print("DEBUG >>> Name field contains:", name)
     assert name == value
+
+@then('I should see "{text_string}" in the "{element_name}" field')
+def step_verify_item(context, text_string, element_name):
+    element_id = "inventory_" + element_name.lower().replace(" ", "_")
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.text_to_be_present_in_element_value((By.ID, element_id), text_string)
+    )
+    assert found
 
 @when('I change "{element_name}" to "{text_string}"')
 def step_update_item(context, element_name, text_string):
@@ -94,14 +116,6 @@ def step_update_item(context, element_name, text_string):
     )
     element.clear()
     element.send_keys(text_string)
-
-@then('I should see "{text_string}" in the "{element_name}" field')
-def step_verify_item(context, text_string, element_name):
-    element_id = "inventory_" + element_name.lower().replace(" ", "_")
-    found = WebDriverWait(context.driver, context.wait_seconds).until(
-        EC.text_to_be_present_in_element_value((By.ID, element_id), text_string)
-    )
-    assert found
 
 @when('I select "{text}" in the "{element_name}" dropdown')
 def step_select_dropdown_value(context, text, element_name):
@@ -123,30 +137,30 @@ def step_verify_field_value(context, value, field):
 
 @then('I should see the message "{message}"')
 def step_verify_message(context, message):
-    flash_message = WebDriverWait(context.driver, context.wait_seconds).until(
-        EC.presence_of_element_located((By.ID, "flash_message"))
+    flash = WebDriverWait(context.driver, context.wait_seconds).until(
+        EC.visibility_of_element_located((By.ID, "flash_message"))
     )
-    assert message in flash_message.text
-
-@then('I should not see "{value}" in the results')
-def step_not_see_in_results(context, value):
-    try:
-        table = context.driver.find_element(By.ID, "search_results_table")
-        assert value not in table.text
-    except:
-        pass
+    assert message in flash.text
 
 @then('I should see a list of items that are "{condition}" condition')
 def step_see_items_by_condition(context, condition):
     table = context.driver.find_element(By.ID, "search_results_table")
     rows = table.find_elements(By.TAG_NAME, "tr")
-    found = any(len(cells := row.find_elements(By.TAG_NAME, "td")) > 0 and cells[3].text == condition for row in rows)
+    found = any(
+        len(cells := row.find_elements(By.TAG_NAME, "td")) > 0 and cells[4].text == condition
+        for row in rows
+    )
     assert found, f"No items found with condition '{condition}'"
 
+@when('I leave the quantity field empty and click the "Restock" button')
+def step_empty_quantity_and_restock(context):
+    field = context.driver.find_element(By.ID, "inventory_quantity")
+    field.clear()
+    context.driver.find_element(By.ID, "perform-action-btn").click()
+
 @given("I have an inventory item with quantity 2")
-def step_impl_quantity_2(context):
-    context.execute_steps(
-        f"""
+def step_seed_inventory_quantity_2(context):
+    context.execute_steps('''
         Given I open the Inventory Admin UI
         When I enter "Notebook" as the name
         And I enter "1001" as the product ID
@@ -154,13 +168,11 @@ def step_impl_quantity_2(context):
         And I select "New" as the condition
         And I enter "10" as the restock level
         And I press the "Create" button
-        """
-    )
+    ''')
 
 @given("I have an inventory item with quantity 1 and restock level 5")
-def step_impl_quantity_1_restock_5(context):
-    context.execute_steps(
-        f"""
+def step_seed_inventory_quantity_1(context):
+    context.execute_steps('''
         Given I open the Inventory Admin UI
         When I enter "Headphones" as the name
         And I enter "1002" as the product ID
@@ -168,27 +180,19 @@ def step_impl_quantity_1_restock_5(context):
         And I select "Used" as the condition
         And I enter "5" as the restock level
         And I press the "Create" button
-        """
-    )
-
-@when('I leave the quantity field empty and click the "Restock" button')
-def step_impl_empty_quantity(context):
-    field = context.driver.find_element(By.ID, "inventory_quantity")
-    field.clear()
-    context.driver.find_element(By.ID, "perform-action-btn").click()
+    ''')
 
 @given('the user is on the home page')
 def step_user_on_home(context):
-    context.browser.get(context.base_url)
+    context.driver.get(os.getenv("BASE_URL", "http://localhost:8080"))
 
 @when('the user clicks the List All button')
-def step_user_click_list_all(context):
-    list_button = context.browser.find_element(By.ID, 'list-btn')
-    list_button.click()
+def step_user_clicks_list(context):
+    context.driver.find_element(By.ID, "list-btn").click()
 
 @then('the inventory list should be displayed')
-def step_inventory_list_displayed(context):
-    table = WebDriverWait(context.browser, 10).until(
+def step_verify_inventory_list(context):
+    table = WebDriverWait(context.driver, 10).until(
         EC.visibility_of_element_located((By.ID, 'search_results_table'))
     )
     rows = table.find_elements(By.TAG_NAME, 'tr')
