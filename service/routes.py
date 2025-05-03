@@ -548,11 +548,37 @@ class RestockResource(Resource):
             "new_stock": item.quantity,
         }, status.HTTP_200_OK
 
+    # def _check_restock_status(self, item):
+    #     """Check if item needs restocking"""
+    #     if item.quantity < item.restock_level:
+    #         app.logger.info(f"Restock alert triggered for item {item.id}")
+    #         return {"message": "Restock alert triggered"}, status.HTTP_200_OK
+
+    #     app.logger.info(f"No restock needed for item {item.id}")
+    #     return {
+    #         "message": "Stock level is above the restock threshold. No action needed."
+    #     }, status.HTTP_200_OK
     def _check_restock_status(self, item):
-        """Check if item needs restocking"""
+        """Check if item needs restocking and update if necessary"""
         if item.quantity < item.restock_level:
-            app.logger.info(f"Restock alert triggered for item {item.id}")
-            return {"message": "Restock alert triggered"}, status.HTTP_200_OK
+            app.logger.info(
+                f"Auto-restocking item {item.id} from {item.quantity} to {item.restock_level}"
+            )
+
+            # Automatically update quantity to restock level
+            item.quantity = item.restock_level
+            try:
+                item.update()
+                return {
+                    "message": "Stock level updated to restock level",
+                    "new_stock": item.quantity,
+                }, status.HTTP_200_OK
+            except DataValidationError as error:
+                return {
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "error": "Internal Server Error",
+                    "message": str(error),
+                }, status.HTTP_500_INTERNAL_SERVER_ERROR
 
         app.logger.info(f"No restock needed for item {item.id}")
         return {

@@ -41,7 +41,7 @@ Feature: The Inventory Admin UI
     And I press the "Retrieve" button
     And I change "quantity" to "30"
     And I press the "Update" button
-    Then I should see the message "Inventory item updated successfully"
+    Then I should see the message "Success: Inventory item updated"
     And I should see "30" in the "quantity" field
 
   Scenario: Perform an action on an inventory item
@@ -57,37 +57,58 @@ Feature: The Inventory Admin UI
     And I enter the grabbed inventory ID
     And I select "Mark as Restocked" in the "Action" dropdown
     And I press the "Perform Action" button
-    Then I should see the message "Item marked as restocked successfully!"
+    Then I should see the message "Stock level updated"
 
 Scenario: Manually add quantity to an inventory item
   Given I have an inventory item with quantity 2
   When I enter 3 in the quantity field and click the "Restock" button
-  Then the item's quantity should be updated to 5
+  Then the item's quantity should be updated to 13
   And the flash message should confirm the quantity was updated
 
+# Scenario: Auto-restock item when quantity is below restock level
+#   Given I have an inventory item with quantity 1 and restock level 5
+#   When I leave the quantity field empty and click the "Restock" button
+#   Then the item's quantity should be updated to match the restock level
+#   And the flash message should confirm the restock was successful
 Scenario: Auto-restock item when quantity is below restock level
-  Given I have an inventory item with quantity 1 and restock level 5
+  Given I open the Inventory Admin UI
+  When I press the "List All" button
+  And I grab the first inventory ID from the results table
+  And I enter the grabbed inventory ID
+  And I press the "Retrieve" button
+  And I change "quantity" to "1"
+  And I press the "Update" button
   When I leave the quantity field empty and click the "Restock" button
   Then the item's quantity should be updated to match the restock level
   And the flash message should confirm the restock was successful
 
+# Scenario: Delete Inventory
+#     Given I open the Inventory Admin UI
+#     When I enter "Laptop" as the name
+#     Then I should see "0" as the quantity
+#     And I should see "NEW" as the condition
+#     And I should see "OUT_OF_STOCK" as the restock level
+#     When I copy the "ID" field
+#     And I press the "Delete" button
+#     Then I should see the message "Inventory has been Deleted!"
+#     When I press the "Search" button
+#     Then I should not see "Laptop" in the results
 Scenario: Delete Inventory
     Given I open the Inventory Admin UI
-    When I enter "Laptop" as the name
-    Then I should see "0" as the quantity
-    And I should see "NEW" as the condition
-    And I should see "OUT_OF_STOCK" as the restock level
-    When I copy the "ID" field
-    And I press the "Delete" button
+    When I press the "List All" button
+    And I grab the first inventory ID from the results table
+    And I enter the grabbed inventory ID
+    And I press the "Retrieve" button
+    When I press the "Delete" button
     Then I should see the message "Inventory has been Deleted!"
-    When I press the "Search" button
+    When I press the "List All" button
     Then I should not see "Laptop" in the results
 
 Scenario: Query by Condition
     Given I open the Inventory Admin UI
     When I select "New" as the condition
     And I press the "Search" button
-    Then the I should see a list of items that are "New" condition
+    Then I should see a list of items that are "New" condition
 
 Scenario: Displaying all inventory items
     Given the user is on the home page

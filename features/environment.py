@@ -3,10 +3,14 @@ Environment for Behave Testing
 """
 
 from os import getenv
+
 from selenium import webdriver
+from selenium.webdriver.firefox.service import Service as FirefoxService
+
 
 WAIT_SECONDS = int(getenv("WAIT_SECONDS", "30"))
-BASE_URL = getenv("BASE_URL", "http://localhost:8080/inventory")
+# BASE_URL = getenv("BASE_URL", "http://localhost:8080/inventory")
+BASE_URL = getenv("BASE_URL", "http://localhost:8080")  # Remove /inventory
 DRIVER = getenv("DRIVER", "chrome").lower()
 
 
@@ -51,4 +55,9 @@ def get_firefox():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--headless")
-    return webdriver.Firefox(options=options)
+    # Explicitly set the path to the Firefox binary
+    options.binary_location = "/usr/bin/firefox"
+    # Manually set GeckoDriver path
+    service = FirefoxService(executable_path="/usr/local/bin/geckodriver")
+    # return webdriver.Firefox(options=options)
+    return webdriver.Firefox(options=options, service=service)

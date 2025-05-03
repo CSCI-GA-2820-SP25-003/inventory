@@ -3,14 +3,16 @@ from selenium.webdriver.common.by import By
 import requests
 import os
 
+
 @then('I should see the title "Inventory Demo RESTful Service"')
 def step_see_title(context):
     assert "Inventory Demo RESTful Service" in context.driver.title
 
+
 @given("the following inventory items")
 def step_seed_inventory(context):
     """Delete all inventory items and create new ones from table"""
-    base_url = os.getenv("BASE_URL", "http://localhost:8080/inventory")
+    base_url = os.getenv("BASE_URL", "http://localhost:8080")
 
     # Clear existing inventory (optional: only if API supports it)
     response = requests.get(f"{base_url}/api/inventory")
