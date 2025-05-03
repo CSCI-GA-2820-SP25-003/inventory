@@ -797,6 +797,35 @@ class TestYourResourceService(TestCase):
             self.assertEqual(resp.status_code, 500)
             self.assertIn("Test error", resp.get_json().get("message", ""))
 
+    @patch(
+        "service.models.Inventory.update",
+        side_effect=DataValidationError("forced failure"),
+    )
+    def test_restock_update_failure(self, _):
+        """Test restocking when update fails to hit error block for coverage"""
+        # Create inventory item
+        response = self.client.post(
+            BASE_URL,
+            json={
+                "name": "Test Product",
+                "product_id": 9999,
+                "quantity": 1,
+                "condition": "New",
+                "restock_level": 5,
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        item_id = response.get_json()["id"]
+
+        # Force update failure
+        response = self.client.post(
+            f"{BASE_URL}/{item_id}/restock_level",
+            json={},
+            headers={"Content-Type": "application/json"},
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertIn("forced failure", response.get_json().get("message", ""))
+
     def test_create_inventory_page(self):
         """It should render the create inventory form page"""
         response = self.client.get("/")
