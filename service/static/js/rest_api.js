@@ -299,25 +299,34 @@ $(function () {
 
     $("#perform-action-btn").click(function () {
         let inventory_id = $("#inventory_id").val();
-        let quantity = $("#inventory_quantity").val();  // Optional input
+        let quantity = $("#inventory_quantity").val();
         let restock_url = `/api/inventory/${inventory_id}/restock_level`;
     
         let payload = {};
         if (quantity) {
-            payload["quantity"] = parseInt(quantity);  // Optional: send only if user enters
+            payload["quantity"] = parseInt(quantity);
         }
     
         $.ajax({
-            type: "POST",  // Match the backend method in routes
+            type: "POST",
             url: restock_url,
             contentType: "application/json",
             data: JSON.stringify(payload),
             success: function (response) {
                 flash_message(response.message || "Restock action completed");
     
-                // Update form if new stock returned
+                // If new_stock is provided, update the quantity field
                 if (response.new_stock !== undefined) {
                     $("#inventory_quantity").val(response.new_stock);
+                } else if (response.message.includes("Stock level updated to restock level")) {
+                    // If the message indicates auto-restock, retrieve the item to get updated data
+                    $.ajax({
+                        type: "GET",
+                        url: `/api/inventory/${inventory_id}`,
+                        success: function(item) {
+                            update_form_data(item);
+                        }
+                    });
                 }
             },
             error: function (xhr) {
@@ -325,6 +334,35 @@ $(function () {
             }
         });
     });
+
+    // $("#perform-action-btn").click(function () {
+    //     let inventory_id = $("#inventory_id").val();
+    //     let quantity = $("#inventory_quantity").val();  // Optional input
+    //     let restock_url = `/api/inventory/${inventory_id}/restock_level`;
+    
+    //     let payload = {};
+    //     if (quantity) {
+    //         payload["quantity"] = parseInt(quantity);  // Optional: send only if user enters
+    //     }
+    
+    //     $.ajax({
+    //         type: "POST",  // Match the backend method in routes
+    //         url: restock_url,
+    //         contentType: "application/json",
+    //         data: JSON.stringify(payload),
+    //         success: function (response) {
+    //             flash_message(response.message || "Restock action completed");
+    
+    //             // Update form if new stock returned
+    //             if (response.new_stock !== undefined) {
+    //                 $("#inventory_quantity").val(response.new_stock);
+    //             }
+    //         },
+    //         error: function (xhr) {
+    //             flash_message("Error: " + xhr.responseText);
+    //         }
+    //     });
+    // });
     
 
     // Perform Restock Action on Inventory Item

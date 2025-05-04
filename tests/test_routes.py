@@ -513,8 +513,25 @@ class TestYourResourceService(TestCase):
         self.assertEqual(data["message"], "Stock level updated")
         self.assertEqual(data["new_stock"], 15 + 27)
 
+    # def test_restock_alert_triggered(self):
+    #     """It should trigger a restock alert if stock is below restock_level and no quantity is provided"""
+    #     test_inventory = self._create_inventory()
+    #     # Force quantity to 0, restock_level to 10 so it's below threshold
+    #     update_data = {"quantity": 0, "restock_level": 10}
+    #     update_resp = self.client.put(
+    #         f"/api/inventory/{test_inventory.id}", json=update_data
+    #     )
+    #     self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
+
+    #     # No quantity in POST, should trigger alert
+    #     resp = self.client.post(
+    #         f"/api/inventory/{test_inventory.id}/restock_level", json={}
+    #     )
+    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    #     data = resp.get_json()
+    #     self.assertEqual(data["message"], "Restock alert triggered")
     def test_restock_alert_triggered(self):
-        """It should trigger a restock alert if stock is below restock_level and no quantity is provided"""
+        """It should automatically restock if stock is below restock_level and no quantity is provided"""
         test_inventory = self._create_inventory()
         # Force quantity to 0, restock_level to 10 so it's below threshold
         update_data = {"quantity": 0, "restock_level": 10}
@@ -523,13 +540,16 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(update_resp.status_code, status.HTTP_200_OK)
 
-        # No quantity in POST, should trigger alert
+        # No quantity in POST, should trigger auto-restock
         resp = self.client.post(
             f"/api/inventory/{test_inventory.id}/restock_level", json={}
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(data["message"], "Restock alert triggered")
+        self.assertEqual(data["message"], "Stock level updated to restock level")
+        self.assertEqual(
+            data["new_stock"], 10
+        )  # Verify quantity was updated to restock level
 
     def test_restock_no_action_needed(self):
         """It should return a 'no action needed' message if stock is above restock_level"""
@@ -776,6 +796,35 @@ class TestYourResourceService(TestCase):
             )
             self.assertEqual(resp.status_code, 500)
             self.assertIn("Test error", resp.get_json().get("message", ""))
+
+    @patch(
+        "service.models.Inventory.update",
+        side_effect=DataValidationError("forced failure"),
+    )
+    def test_restock_update_failure(self, _):
+        """Test restocking when update fails to hit error block for coverage"""
+        # Create inventory item
+        response = self.client.post(
+            BASE_URL,
+            json={
+                "name": "Test Product",
+                "product_id": 9999,
+                "quantity": 1,
+                "condition": "New",
+                "restock_level": 5,
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        item_id = response.get_json()["id"]
+
+        # Force update failure
+        response = self.client.post(
+            f"{BASE_URL}/{item_id}/restock_level",
+            json={},
+            headers={"Content-Type": "application/json"},
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertIn("forced failure", response.get_json().get("message", ""))
 
     def test_create_inventory_page(self):
         """It should render the create inventory form page"""
